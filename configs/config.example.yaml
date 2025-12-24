@@ -1,0 +1,70 @@
+# DarkPool Market Maker Example Configuration
+# Copy this file to config.yaml and modify as needed
+
+# Basic configuration
+app:
+  name: "mm-example"
+  logLevel: "info"    # debug, info, warn, error
+
+# Signer configuration
+signer:
+  # Method 1: Direct private key configuration (development, highest priority)
+  # Warning: Use environment variable method for production
+  privateKey: "0x0000000000000000000000000000000000000000000000000000000000000001"
+  # Method 2: Read from environment variable (recommended for production)
+  privateKeyEnv: "MM_PRIVATE_KEY"
+
+# WebSocket configuration (connect to SwapEngine)
+websocket:
+  serverUrl: "ws://127.0.0.1:8091/ws"
+  # JWT Token (obtain from swap-engine admin panel, mm_address must match signer address)
+  apiToken: "your-jwt-token-here"
+  reconnectInterval: "5s"
+  maxReconnectAttempts: 0     # 0 = unlimited reconnection
+  heartbeatInterval: "30s"
+  readTimeout: "90s"
+  writeTimeout: "10s"
+
+# EIP-712 Domain configuration (independent for each chain)
+# These values must match the configuration in DarkPool Pool contract
+eip712Domains:
+  - chainId: 56
+    name: "DarkPool Pool"
+    version: "1"
+    verifyingContract: "0x28D3a265f6d40867986004029ee91F4C9532fCC5"
+  - chainId: 8453
+    name: "DarkPool Pool"
+    version: "1"
+    verifyingContract: "0x2F46232bC664356BB38AA556Fe1aC939B2Cc7c74"
+
+# Quote configuration
+quote:
+  validDuration: "30s"   # Quote validity period
+
+# Depth push configuration
+depth:
+  enabled: true
+  pushInterval: "3s"     # Push interval
+
+# Supported trading pairs configuration
+# Used for validating quote requests and precision conversion
+pairs:
+  # BSC - WBNB/USDT
+  - chainId: 56
+    pairId: "WBNB-USDT"
+    poolAddress: "0x172fcD41E0913e95784454622d1c3724f546f849"
+    baseToken: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"   # WBNB
+    quoteToken: "0x55d398326f99059fF775485246999027B3197955"  # USDT
+    baseTokenDecimals: 18
+    quoteTokenDecimals: 18
+    feeRate: 2500  # 0.25%
+
+  # Base - WETH/USDC
+  - chainId: 8453
+    pairId: "WETH-USDC"
+    poolAddress: "0x72ab388e2e2f6facef59e3c3fa2c4e29011c2d38"
+    baseToken: "0x4200000000000000000000000000000000000006"   # WETH
+    quoteToken: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"  # USDC
+    baseTokenDecimals: 18
+    quoteTokenDecimals: 6
+    feeRate: 100   # 0.01%
