@@ -17,7 +17,7 @@ signer:
 # WebSocket configuration (connect to SwapEngine)
 websocket:
   serverUrl: "ws://127.0.0.1:8091/ws"
-  # JWT Token (obtain from swap-engine admin panel, mm_address must match signer address)
+  # JWT Token (obtain from swap-engine admin panel, mm_id must match signer address)
   apiToken: "your-jwt-token-here"
   reconnectInterval: "5s"
   maxReconnectAttempts: 0     # 0 = unlimited reconnection
@@ -45,26 +45,3 @@ quote:
 depth:
   enabled: true
   pushInterval: "3s"     # Push interval
-
-# Supported trading pairs configuration
-# Used for validating quote requests and precision conversion
-pairs:
-  # BSC - WBNB/USDT
-  - chainId: 56
-    pairId: "WBNB-USDT"
-    poolAddress: "0x172fcD41E0913e95784454622d1c3724f546f849"
-    baseToken: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"   # WBNB
-    quoteToken: "0x55d398326f99059fF775485246999027B3197955"  # USDT
-    baseTokenDecimals: 18
-    quoteTokenDecimals: 18
-    feeRate: 2500  # 0.25%
-
-  # Base - WETH/USDC
-  - chainId: 8453
-    pairId: "WETH-USDC"
-    poolAddress: "0x72ab388e2e2f6facef59e3c3fa2c4e29011c2d38"
-    baseToken: "0x4200000000000000000000000000000000000006"   # WETH
-    quoteToken: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"  # USDC
-    baseTokenDecimals: 18
-    quoteTokenDecimals: 6
-    feeRate: 100   # 0.01%

@@ -81,7 +81,6 @@ type DepthConfig struct {
 type PairConfig struct {
 	ChainID            uint64 `yaml:"chainId"`
 	PairID             string `yaml:"pairId"`
-	PoolAddress        string `yaml:"poolAddress"`
 	BaseToken          string `yaml:"baseToken"`
 	QuoteToken         string `yaml:"quoteToken"`
 	BaseTokenDecimals  int    `yaml:"baseTokenDecimals"`

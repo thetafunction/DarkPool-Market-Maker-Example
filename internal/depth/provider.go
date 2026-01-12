@@ -7,11 +7,11 @@ import (
 // DepthProvider is the depth data provider interface
 // Third-party MMs need to implement this interface to provide real depth data
 type DepthProvider interface {
-	// GetDepth retrieves depth data for a specified pool
+	// GetDepth retrieves depth data for a specified pair
 	// chainID: Chain ID
-	// poolAddress: V3 Pool address
+	// pairID: trading pair identifier
 	// Returns OrderBook or error
-	GetDepth(chainID uint64, poolAddress string) (*OrderBook, error)
+	GetDepth(chainID uint64, pairID string) (*OrderBook, error)
 }
 
 // OrderBook represents the order book data structure

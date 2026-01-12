@@ -114,7 +114,7 @@ func (p *Pusher) pushAllPairs() {
 // pushDepthSnapshot pushes depth snapshot for a single trading pair
 func (p *Pusher) pushDepthSnapshot(pair config.PairConfig) error {
 	// Get depth data
-	orderBook, err := p.provider.GetDepth(pair.ChainID, pair.PoolAddress)
+	orderBook, err := p.provider.GetDepth(pair.ChainID, pair.PairID)
 	if err != nil {
 		return fmt.Errorf("failed to get depth: %w", err)
 	}
@@ -161,16 +161,6 @@ func (p *Pusher) pushDepthSnapshot(pair config.PairConfig) error {
 //   - Price = 3400 * 10^6 / 10^18 = 3.4e-9 = "0.0000000034"
 //   - Amount = 3.28e18 = "3280000000000000000"
 func (p *Pusher) buildDepthSnapshot(ob *OrderBook, pair config.PairConfig, domain *config.EIP712Domain) *mmv1.DepthSnapshot {
-	// Use timestamp as sequence number
-	seqId := uint64(time.Now().UnixMilli())
-
-	// Mid price (wei/wei format)
-	var midPriceStr string
-	if ob.MidPrice != nil {
-		// Use high precision formatting, keep 30 decimal places (wei/wei ratio can be very small)
-		midPriceStr = ob.MidPrice.Text('f', 30)
-	}
-
 	// Build asks and bids
 	// Price: wei/wei format, Amount: tokenA native decimals
 	asks := make([]*mmv1.PriceLevel, len(ob.Asks))
@@ -190,21 +180,13 @@ func (p *Pusher) buildDepthSnapshot(ob *OrderBook, pair config.PairConfig, domai
 	}
 
 	return &mmv1.DepthSnapshot{
-		ChainId:     pair.ChainID,
-		ChainName:   getChainName(pair.ChainID),
-		PairId:      pair.PairID,
-		MmId:        strings.ToLower(domain.VerifyingContract), // Use pool address as MmID
-		FeeRate:     pair.FeeRate,
-		MmAddress:   strings.ToLower(domain.VerifyingContract),
-		PoolAddress: strings.ToLower(pair.PoolAddress),
-		TokenA:      strings.ToLower(pair.BaseToken),
-		TokenB:      strings.ToLower(pair.QuoteToken),
-		MidPrice:    midPriceStr,
-		Spread:      fmt.Sprintf("%.6f", ob.Spread),
-		Asks:        asks,
-		Bids:        bids,
-		BlockNumber: 0, // Mock data has no block number
-		SequenceId:  seqId,
+		ChainId: pair.ChainID,
+		PairId:  pair.PairID,
+		MmId:    strings.ToLower(domain.VerifyingContract),
+		TokenA:  strings.ToLower(pair.BaseToken),
+		TokenB:  strings.ToLower(pair.QuoteToken),
+		Bids:    bids,
+		Asks:    asks,
 	}
 }
 
@@ -297,7 +279,7 @@ func (p *Pusher) handleConnectionAck(ack *mmv1.ConnectionAck) error {
 	if ack.Success {
 		p.logger.Info("Connection successful",
 			"sessionId", ack.SessionId,
-			"mmAddress", ack.MmAddress)
+			"mmId", ack.MmId)
 		// Set to Ready state
 		p.wsClient.SetState(ws.StateReady)
 

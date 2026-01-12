@@ -20,7 +20,7 @@ type MMQuote struct {
 	AmountOut   *big.Int       // Output amount (minimum guaranteed output, native decimals)
 	Deadline    *big.Int       // Expiration timestamp (Unix seconds)
 	Nonce       *big.Int       // Anti-replay nonce
-	ExtraData   []byte         // Extra data (used to calculate extraDataHash)
+	ExtraData   []byte         // Optional opaque bytes (used to calculate extraDataHash)
 }
 
 // MMQuoteTypeHash is the keccak256 hash of MMQuote type

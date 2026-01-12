@@ -93,8 +93,7 @@ func (h *Handler) HandleQuoteRequest(ctx context.Context, req *mmv1.QuoteRequest
 	}
 
 	// 4. Get trading pair configuration
-	pairConfig := h.cfg.GetPairConfig(req.ChainId, tokenIn.Hex(), tokenOut.Hex())
-	if pairConfig == nil {
+	if h.cfg.GetPairConfig(req.ChainId, tokenIn.Hex(), tokenOut.Hex()) == nil {
 		h.logger.Error("pair not found", "chainId", req.ChainId, "tokenIn", tokenIn.Hex(), "tokenOut", tokenOut.Hex())
 		return h.buildRejectMessage(req, mmv1.RejectReason_REJECT_REASON_PAIR_NOT_SUPPORTED,
 			fmt.Sprintf("pair not found for tokens %s-%s", tokenIn.Hex(), tokenOut.Hex())), nil
@@ -130,28 +129,8 @@ func (h *Handler) HandleQuoteRequest(ctx context.Context, req *mmv1.QuoteRequest
 		"amountOut", quoteResult.AmountOut.String(),
 		"amountOutMinimum", quoteResult.AmountOutMinimum.String())
 
-	// 8. Build ExtraData
-	// payToken uses wrapped token address (if original is zero address, use wrapped version)
-	payToken := tokenIn
-
-	callbackData, err := signer.BuildCallbackData(payToken)
-	if err != nil {
-		h.logger.Error("callbackData encoding failed", "error", err)
-		return h.buildRejectMessage(req, mmv1.RejectReason_REJECT_REASON_INTERNAL_ERROR, "callbackdata encoding failed"), nil
-	}
-
-	extraDataParams := &signer.ExtraDataParams{
-		Pool:              common.HexToAddress(pairConfig.PoolAddress),
-		ZeroForOne:        quoteResult.ZeroForOne,
-		SqrtPriceLimitX96: signer.MinMaxSqrtPriceX96(quoteResult.ZeroForOne),
-		CallbackData:      callbackData,
-	}
-
-	extraData, err := signer.EncodeExtraData(extraDataParams)
-	if err != nil {
-		h.logger.Error("extraData encoding failed", "error", err)
-		return h.buildRejectMessage(req, mmv1.RejectReason_REJECT_REASON_INTERNAL_ERROR, "extradata encoding failed"), nil
-	}
+	// 8. ExtraData is optional; demo keeps it empty
+	extraData := []byte{}
 
 	// 9. Parse nonce
 	nonce, ok := new(big.Int).SetString(req.Nonce, 10)

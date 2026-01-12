@@ -37,9 +37,14 @@ func (p *MockProvider) SetBasePrice(chainID uint64, baseToken, quoteToken string
 }
 
 // GetDepth gets depth data
-func (p *MockProvider) GetDepth(chainID uint64, poolAddress string) (*OrderBook, error) {
-	// Mock implementation: directly use poolAddress as part of the key
+func (p *MockProvider) GetDepth(chainID uint64, pairID string) (*OrderBook, error) {
+	// Mock implementation: pairID is not used to select price, but must be provided.
 	// Real implementation should read from on-chain or get from CEX API
+	pairID = strings.TrimSpace(pairID)
+	if pairID == "" {
+		return nil, fmt.Errorf("pair_id is required")
+	}
+
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
@@ -61,7 +66,7 @@ func (p *MockProvider) GetDepth(chainID uint64, poolAddress string) (*OrderBook,
 	}
 
 	if basePrice == nil {
-		return nil, fmt.Errorf("no price configured for chain %d", chainID)
+		return nil, fmt.Errorf("no price configured for chain %d pair %s", chainID, pairID)
 	}
 
 	// Generate mock order book

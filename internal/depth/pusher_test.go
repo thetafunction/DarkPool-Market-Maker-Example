@@ -69,7 +69,7 @@ func TestMockProvider_GetDepth(t *testing.T) {
 	provider := DefaultMockProvider()
 
 	// Test BSC
-	ob, err := provider.GetDepth(56, "0x172fcD41E0913e95784454622d1c3724f546f849")
+	ob, err := provider.GetDepth(56, "WBNB-USDT")
 	if err != nil {
 		t.Fatalf("GetDepth failed: %v", err)
 	}
@@ -112,7 +112,7 @@ func TestMockProvider_GetDepth(t *testing.T) {
 func TestMockProvider_GetDepth_ChainNotConfigured(t *testing.T) {
 	provider := NewMockProvider() // Empty provider
 
-	_, err := provider.GetDepth(999, "0xpool")
+	_, err := provider.GetDepth(999, "PAIR-UNKNOWN")
 	if err == nil {
 		t.Error("GetDepth should fail for unconfigured chain")
 	}
@@ -122,7 +122,7 @@ func TestDefaultMockProvider(t *testing.T) {
 	provider := DefaultMockProvider()
 
 	// Verify BSC configuration
-	ob, err := provider.GetDepth(56, "")
+	ob, err := provider.GetDepth(56, "WBNB-USDT")
 	if err != nil {
 		t.Errorf("BSC should be configured: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestDefaultMockProvider(t *testing.T) {
 	}
 
 	// Verify Base configuration
-	ob, err = provider.GetDepth(8453, "")
+	ob, err = provider.GetDepth(8453, "WETH-USDC")
 	if err != nil {
 		t.Errorf("Base should be configured: %v", err)
 	}
@@ -229,7 +229,7 @@ func TestMockProvider_GenerateBids(t *testing.T) {
 func TestOrderBook_Spread(t *testing.T) {
 	provider := DefaultMockProvider()
 
-	ob, _ := provider.GetDepth(56, "")
+	ob, _ := provider.GetDepth(56, "WBNB-USDT")
 
 	// Verify spread calculation
 	if ob.Spread < 0 {

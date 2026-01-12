@@ -39,8 +39,8 @@ vim configs/config.yaml
 Key configuration items:
 - `signer.privateKey`: MM signing private key
 - `websocket.serverUrl`: DarkPool system WebSocket URL
-- `websocket.apiToken`: JWT Token obtained from DarkPool administrator
-- `eip712Domains`: DarkPool Pool contract addresses for each chain
+- `websocket.apiToken`: JWT Token obtained from DarkPool administrator (mm_id must match signer)
+- `eip712Domains`: EIP-712 verifying contract domains for each chain
 
 ### 3. Build and Run
 
@@ -104,7 +104,7 @@ Implement the `DepthProvider` interface:
 
 ```go
 type DepthProvider interface {
-    GetDepth(chainID uint64, poolAddress string) (*OrderBook, error)
+  GetDepth(chainID uint64, pairID string) (*OrderBook, error)
 }
 ```
 
@@ -124,6 +124,10 @@ make run      # Build and run
 make test     # Run tests
 make proto    # Regenerate proto code
 make clean    # Clean build artifacts
+make tidy     # Tidy go modules
+make fmt      # Format code
+make vet      # Vet code
+make lint     # Run fmt + vet
 ```
 
 ## License

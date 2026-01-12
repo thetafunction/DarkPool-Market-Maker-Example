@@ -113,7 +113,7 @@ func TestClient_Connect(t *testing.T) {
 				ConnectionAck: &mmv1.ConnectionAck{
 					Success:   true,
 					SessionId: "test-session",
-					MmAddress: "0x1234",
+					MmId:      "0x1234",
 				},
 			},
 		}

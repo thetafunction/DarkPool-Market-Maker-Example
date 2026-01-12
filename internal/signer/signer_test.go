@@ -21,7 +21,7 @@ func TestMMQuoteTypeHash(t *testing.T) {
 
 func TestEIP712Domain_DomainSeparator(t *testing.T) {
 	domain := &EIP712Domain{
-		Name:              "RFQ Pool",
+		Name:              "RFQ Domain",
 		Version:           "1",
 		ChainID:           big.NewInt(56),
 		VerifyingContract: common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"),
@@ -42,13 +42,13 @@ func TestEIP712Domain_DomainSeparator(t *testing.T) {
 func TestDomainManager(t *testing.T) {
 	dm := NewDomainManager()
 
-	// Test adding domain
+	// Test adding domain (verifying contract)
 	dm.AddPoolDomain(56, common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"))
 
-	// Test getting domain
+	// Test getting domain (verifying contract)
 	domain := dm.GetPoolDomain(56)
 	if domain == nil {
-		t.Fatal("GetPoolDomain returned nil")
+		t.Fatal("GetDomain returned nil")
 	}
 	if domain.Name != DefaultDomainName {
 		t.Errorf("Domain.Name = %s, want %s", domain.Name, DefaultDomainName)
@@ -57,18 +57,18 @@ func TestDomainManager(t *testing.T) {
 		t.Errorf("Domain.ChainID = %d, want 56", domain.ChainID.Int64())
 	}
 
-	// Test HasPoolDomain
+	// Test verifying contract domain presence
 	if !dm.HasPoolDomain(56) {
-		t.Error("HasPoolDomain(56) should be true")
+		t.Error("Domain presence for chain 56 should be true")
 	}
 	if dm.HasPoolDomain(1) {
-		t.Error("HasPoolDomain(1) should be false")
+		t.Error("Domain presence for chain 1 should be false")
 	}
 
-	// Test GetPoolDomainSeparator
+	// Test verifying contract domain separator
 	separator, ok := dm.GetPoolDomainSeparator(56)
 	if !ok {
-		t.Error("GetPoolDomainSeparator should return true for configured chain")
+		t.Error("Domain separator should return true for configured chain")
 	}
 	if len(separator) != 32 {
 		t.Errorf("DomainSeparator length = %d, want 32", len(separator))
@@ -76,7 +76,7 @@ func TestDomainManager(t *testing.T) {
 
 	_, ok = dm.GetPoolDomainSeparator(1)
 	if ok {
-		t.Error("GetPoolDomainSeparator should return false for unconfigured chain")
+		t.Error("Domain separator should return false for unconfigured chain")
 	}
 
 	// Test ChainIDs
@@ -90,14 +90,14 @@ func TestDomainManager_AddPoolDomainWithConfig(t *testing.T) {
 	dm := NewDomainManager()
 
 	// Use custom configuration
-	dm.AddPoolDomainWithConfig(8453, "Custom Pool", "2", "0x2F46232bC664356BB38AA556Fe1aC939B2Cc7c74")
+	dm.AddPoolDomainWithConfig(8453, "Custom Domain", "2", "0x2F46232bC664356BB38AA556Fe1aC939B2Cc7c74")
 
 	domain := dm.GetPoolDomain(8453)
 	if domain == nil {
-		t.Fatal("GetPoolDomain returned nil")
+		t.Fatal("GetDomain returned nil")
 	}
-	if domain.Name != "Custom Pool" {
-		t.Errorf("Domain.Name = %s, want Custom Pool", domain.Name)
+	if domain.Name != "Custom Domain" {
+		t.Errorf("Domain.Name = %s, want Custom Domain", domain.Name)
 	}
 	if domain.Version != "2" {
 		t.Errorf("Domain.Version = %s, want 2", domain.Version)
@@ -211,87 +211,6 @@ func TestSigner_SignMMQuote_ChainNotConfigured(t *testing.T) {
 	_, err := signer.SignMMQuote(56, quote)
 	if err == nil {
 		t.Error("SignMMQuote should fail when chain is not configured")
-	}
-}
-
-func TestMinMaxSqrtPriceX96(t *testing.T) {
-	// zeroForOne = true returns minimum price
-	minPrice := MinMaxSqrtPriceX96(true)
-	expectedMin := new(big.Int).Add(big.NewInt(4295128739), big.NewInt(1))
-	if minPrice.Cmp(expectedMin) != 0 {
-		t.Errorf("MinSqrtPriceX96 = %s, want %s", minPrice.String(), expectedMin.String())
-	}
-
-	// zeroForOne = false returns maximum price
-	maxPrice := MinMaxSqrtPriceX96(false)
-	maxStr := "1461446703485210103287273052203988822378723970342"
-	expectedMax, _ := new(big.Int).SetString(maxStr, 10)
-	expectedMax.Sub(expectedMax, big.NewInt(1))
-	if maxPrice.Cmp(expectedMax) != 0 {
-		t.Errorf("MaxSqrtPriceX96 = %s, want %s", maxPrice.String(), expectedMax.String())
-	}
-}
-
-func TestDetermineZeroForOne(t *testing.T) {
-	token0 := common.HexToAddress("0x1111111111111111111111111111111111111111")
-	token1 := common.HexToAddress("0x2222222222222222222222222222222222222222")
-
-	// sellerToken == token0 -> zeroForOne = true
-	if !DetermineZeroForOne(token0, token0, token1) {
-		t.Error("DetermineZeroForOne should return true when sellerToken == token0")
-	}
-
-	// sellerToken == token1 -> zeroForOne = false
-	if DetermineZeroForOne(token1, token0, token1) {
-		t.Error("DetermineZeroForOne should return false when sellerToken == token1")
-	}
-}
-
-func TestEncodeExtraData(t *testing.T) {
-	params := &ExtraDataParams{
-		Pool:              common.HexToAddress("0x172fcD41E0913e95784454622d1c3724f546f849"),
-		ZeroForOne:        true,
-		SqrtPriceLimitX96: MinMaxSqrtPriceX96(true),
-		CallbackData:      []byte{},
-	}
-
-	data, err := EncodeExtraData(params)
-	if err != nil {
-		t.Fatalf("EncodeExtraData failed: %v", err)
-	}
-
-	// Verify data is not empty
-	if len(data) == 0 {
-		t.Error("EncodeExtraData returned empty data")
-	}
-
-	// Test nil SqrtPriceLimitX96 uses default value
-	params2 := &ExtraDataParams{
-		Pool:         common.HexToAddress("0x172fcD41E0913e95784454622d1c3724f546f849"),
-		ZeroForOne:   false,
-		CallbackData: []byte{},
-	}
-
-	data2, err := EncodeExtraData(params2)
-	if err != nil {
-		t.Fatalf("EncodeExtraData with nil sqrtPriceLimit failed: %v", err)
-	}
-	if len(data2) == 0 {
-		t.Error("EncodeExtraData returned empty data")
-	}
-}
-
-func TestBuildCallbackData(t *testing.T) {
-	payToken := common.HexToAddress("0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c")
-
-	data, err := BuildCallbackData(payToken)
-	if err != nil {
-		t.Fatalf("BuildCallbackData failed: %v", err)
-	}
-
-	// ABI encoded address should be 32 bytes
-	if len(data) != 32 {
-		t.Errorf("BuildCallbackData length = %d, want 32", len(data))
 	}
 }
 

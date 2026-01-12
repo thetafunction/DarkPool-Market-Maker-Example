@@ -13,7 +13,7 @@ import (
 
 // Signer is the EIP-712 signer interface
 type Signer interface {
-	// SignMMQuote signs an MMQuote using EIP-712 (with DarkPool Pool Domain)
+	// SignMMQuote signs an MMQuote using EIP-712 (with verifying contract domain)
 	SignMMQuote(chainID uint64, quote *MMQuote) ([]byte, error)
 	// GetAddress returns the signer address
 	GetAddress() common.Address
@@ -86,9 +86,9 @@ func (s *signer) GetAddress() common.Address {
 	return s.address
 }
 
-// SignMMQuote signs an MMQuote using EIP-712 (with DarkPool Pool Domain)
+// SignMMQuote signs an MMQuote using EIP-712 (with verifying contract domain)
 func (s *signer) SignMMQuote(chainID uint64, quote *MMQuote) ([]byte, error) {
-	// Get DarkPool Pool Domain Separator
+	// Get verifying contract domain separator
 	domainSeparator, ok := s.domainManager.GetPoolDomainSeparator(chainID)
 	if !ok {
 		return nil, fmt.Errorf("pool domain not configured for chainId %d", chainID)

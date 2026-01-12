@@ -29,13 +29,12 @@ type QuoteParams struct {
 type QuoteResult struct {
 	AmountOut        *big.Int   // Output amount (native decimals)
 	AmountOutMinimum *big.Int   // Minimum output amount (after slippage, native decimals)
-	ZeroForOne       bool       // Swap direction (true: token0 -> token1)
 	ExecutionPrice   *big.Float // Execution price (outputToken/inputToken)
 	PriceImpact      float64    // Price impact (percentage, e.g., 0.05 means 0.05%)
 }
 
 // NewQuoteResult creates a quote result
-func NewQuoteResult(amountOut *big.Int, slippageBps uint32, zeroForOne bool) *QuoteResult {
+func NewQuoteResult(amountOut *big.Int, slippageBps uint32) *QuoteResult {
 	// Calculate minimum output after slippage deduction
 	// amountOutMin = amountOut * (10000 - slippageBps) / 10000
 	slippageFactor := big.NewInt(int64(10000 - slippageBps))
@@ -45,7 +44,6 @@ func NewQuoteResult(amountOut *big.Int, slippageBps uint32, zeroForOne bool) *Qu
 	return &QuoteResult{
 		AmountOut:        amountOut,
 		AmountOutMinimum: amountOutMin,
-		ZeroForOne:       zeroForOne,
 		ExecutionPrice:   big.NewFloat(0),
 		PriceImpact:      0,
 	}

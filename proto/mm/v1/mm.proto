@@ -47,7 +47,7 @@ message ConnectionAck {
   bool success = 1;
   string session_id = 2;
   int64 server_time = 3;              // Server time (Unix milliseconds)
-  string mm_address = 4;              // Confirmed MM address
+  string mm_id = 4;                   // Confirmed MM ID
   ConnectionConfig config = 5;
   string error_message = 6;           // Error message on failure
 }
@@ -66,20 +66,12 @@ message ConnectionConfig {
 // DepthSnapshot depth snapshot (pushed independently for each pool)
 message DepthSnapshot {
   uint64 chain_id = 1;
-  string chain_name = 2;
-  string pair_id = 3;
-  string mm_id = 4;
-  uint32 fee_rate = 5;
-  string mm_address = 6;
-  string pool_address = 7;
-  string token_a = 8;
-  string token_b = 9;
-  string mid_price = 10;         // Mid price (string, preserves precision)
-  string spread = 11;            // Bid-ask spread ratio
-  repeated PriceLevel bids = 12; // Bids (price descending)
-  repeated PriceLevel asks = 13; // Asks (price ascending)
-  uint64 block_number = 14;      // Block number
-  uint64 sequence_id = 15;       // Sequence ID
+  string pair_id = 2;
+  string mm_id = 3;
+  string token_a = 4;
+  string token_b = 5;
+  repeated PriceLevel bids = 6; // Bids (price descending)
+  repeated PriceLevel asks = 7; // Asks (price ascending)
 }
 
 // PriceLevel price level
@@ -147,7 +139,7 @@ message SignedOrder {
   string amount_in = 4;           // Input amount (18 decimals)
   string amount_out = 5;          // Minimum output amount (18 decimals)
   int64 deadline = 6;             // Expiration timestamp (Unix seconds)
-  bytes extra_data = 7;           // Extra data: abi.encode(v3Pool, zeroForOne, sqrtPriceLimit, callbackData)
+  bytes extra_data = 7;           // Optional opaque bytes (demo uses empty bytes)
   bytes signature = 8;            // EIP-712 signature (65 bytes)
 }
 

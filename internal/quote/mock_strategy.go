@@ -70,11 +70,8 @@ func (s *MockStrategy) CalculateQuote(ctx context.Context, params *QuoteParams) 
 		return nil, fmt.Errorf("calculated amount out is zero or negative")
 	}
 
-	// Determine swap direction (simplified: based on address byte order)
-	zeroForOne := strings.ToLower(params.TokenIn.Hex()) < strings.ToLower(params.TokenOut.Hex())
-
 	// Build result
-	result := NewQuoteResult(amountOut, params.SlippageBps, zeroForOne)
+	result := NewQuoteResult(amountOut, params.SlippageBps)
 	result.ExecutionPrice = price
 	result.PriceImpact = float64(s.SpreadBps) / 100 // Simplified: spread equals price impact
 
