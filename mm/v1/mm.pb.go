@@ -220,6 +220,7 @@ const (
 	ErrorCode_ERROR_CODE_DUPLICATE_REGISTER   ErrorCode = 6
 	ErrorCode_ERROR_CODE_UNAUTHORIZED         ErrorCode = 7 // Token verification failed
 	ErrorCode_ERROR_CODE_PAIR_NOT_WHITELISTED ErrorCode = 8 // Pair not whitelisted
+	ErrorCode_ERROR_CODE_RATE_LIMITED         ErrorCode = 9 // Rate limited (exceeded rate limit)
 )
 
 // Enum value maps for ErrorCode.
@@ -234,6 +235,7 @@ var (
 		6: "ERROR_CODE_DUPLICATE_REGISTER",
 		7: "ERROR_CODE_UNAUTHORIZED",
 		8: "ERROR_CODE_PAIR_NOT_WHITELISTED",
+		9: "ERROR_CODE_RATE_LIMITED",
 	}
 	ErrorCode_value = map[string]int32{
 		"ERROR_CODE_UNSPECIFIED":          0,
@@ -245,6 +247,7 @@ var (
 		"ERROR_CODE_DUPLICATE_REGISTER":   6,
 		"ERROR_CODE_UNAUTHORIZED":         7,
 		"ERROR_CODE_PAIR_NOT_WHITELISTED": 8,
+		"ERROR_CODE_RATE_LIMITED":         9,
 	}
 )
 
@@ -752,13 +755,13 @@ type QuoteRequest struct {
 	QuoteId       string                 `protobuf:"bytes,1,opt,name=quote_id,json=quoteId,proto3" json:"quote_id,omitempty"` // Quote request unique ID (UUID)
 	ChainId       uint64                 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 	MmId          string                 `protobuf:"bytes,3,opt,name=mm_id,json=mmId,proto3" json:"mm_id,omitempty"`
-	TokenIn       string                 `protobuf:"bytes,4,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty"`               // Input token address
-	TokenOut      string                 `protobuf:"bytes,5,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty"`            // Output token address
-	AmountIn      string                 `protobuf:"bytes,6,opt,name=amount_in,json=amountIn,proto3" json:"amount_in,omitempty"`            // Input amount (uint256 string, 18 decimals)
-	Recipient     string                 `protobuf:"bytes,7,opt,name=recipient,proto3" json:"recipient,omitempty"`                          // User recipient address
-	Nonce         string                 `protobuf:"bytes,8,opt,name=nonce,proto3" json:"nonce,omitempty"`                                  // Anti-replay nonce
-	Deadline      int64                  `protobuf:"varint,9,opt,name=deadline,proto3" json:"deadline,omitempty"`                           // Expiration timestamp (Unix seconds)
-	SlippageBps   uint32                 `protobuf:"varint,10,opt,name=slippage_bps,json=slippageBps,proto3" json:"slippage_bps,omitempty"` // Slippage tolerance (basis points)
+	TokenIn       string                 `protobuf:"bytes,4,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty"`    // Input token address
+	TokenOut      string                 `protobuf:"bytes,5,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty"` // Output token address
+	AmountIn      string                 `protobuf:"bytes,6,opt,name=amount_in,json=amountIn,proto3" json:"amount_in,omitempty"` // Input amount (uint256 string)
+	Recipient     string                 `protobuf:"bytes,7,opt,name=recipient,proto3" json:"recipient,omitempty"`               // User recipient address
+	Nonce         string                 `protobuf:"bytes,8,opt,name=nonce,proto3" json:"nonce,omitempty"`                       // Anti-replay nonce
+	Deadline      int64                  `protobuf:"varint,9,opt,name=deadline,proto3" json:"deadline,omitempty"`                // Expiration timestamp (Unix seconds)
+	From          string                 `protobuf:"bytes,10,opt,name=from,proto3" json:"from,omitempty"`                        // Sender address
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -856,11 +859,11 @@ func (x *QuoteRequest) GetDeadline() int64 {
 	return 0
 }
 
-func (x *QuoteRequest) GetSlippageBps() uint32 {
+func (x *QuoteRequest) GetFrom() string {
 	if x != nil {
-		return x.SlippageBps
+		return x.From
 	}
-	return 0
+	return ""
 }
 
 // QuoteResponse quote response
@@ -870,9 +873,7 @@ type QuoteResponse struct {
 	ChainId       uint64                 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
 	MmId          string                 `protobuf:"bytes,3,opt,name=mm_id,json=mmId,proto3" json:"mm_id,omitempty"`
 	Status        QuoteStatus            `protobuf:"varint,4,opt,name=status,proto3,enum=mm.v1.QuoteStatus" json:"status,omitempty"`
-	Quote         *QuoteInfo             `protobuf:"bytes,5,opt,name=quote,proto3" json:"quote,omitempty"`                              // Quote info (for display)
-	Order         *SignedOrder           `protobuf:"bytes,6,opt,name=order,proto3" json:"order,omitempty"`                              // Signed order (for on-chain execution)
-	ValidUntil    int64                  `protobuf:"varint,7,opt,name=valid_until,json=validUntil,proto3" json:"valid_until,omitempty"` // Quote validity period (Unix milliseconds)
+	Order         *SignedOrder           `protobuf:"bytes,5,opt,name=order,proto3" json:"order,omitempty"` // Signed order (for on-chain execution)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -935,13 +936,6 @@ func (x *QuoteResponse) GetStatus() QuoteStatus {
 	return QuoteStatus_QUOTE_STATUS_UNSPECIFIED
 }
 
-func (x *QuoteResponse) GetQuote() *QuoteInfo {
-	if x != nil {
-		return x.Quote
-	}
-	return nil
-}
-
 func (x *QuoteResponse) GetOrder() *SignedOrder {
 	if x != nil {
 		return x.Order
@@ -949,124 +943,24 @@ func (x *QuoteResponse) GetOrder() *SignedOrder {
 	return nil
 }
 
-func (x *QuoteResponse) GetValidUntil() int64 {
-	if x != nil {
-		return x.ValidUntil
-	}
-	return 0
-}
-
-// QuoteInfo quote information (for frontend display)
-type QuoteInfo struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	TokenIn          string                 `protobuf:"bytes,1,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty"`
-	TokenOut         string                 `protobuf:"bytes,2,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty"`
-	AmountIn         string                 `protobuf:"bytes,3,opt,name=amount_in,json=amountIn,proto3" json:"amount_in,omitempty"`
-	AmountOut        string                 `protobuf:"bytes,4,opt,name=amount_out,json=amountOut,proto3" json:"amount_out,omitempty"`
-	AmountOutMinimum string                 `protobuf:"bytes,5,opt,name=amount_out_minimum,json=amountOutMinimum,proto3" json:"amount_out_minimum,omitempty"`
-	Price            string                 `protobuf:"bytes,6,opt,name=price,proto3" json:"price,omitempty"`                                // Execution price
-	PriceImpact      string                 `protobuf:"bytes,7,opt,name=price_impact,json=priceImpact,proto3" json:"price_impact,omitempty"` // Price impact percentage
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
-}
-
-func (x *QuoteInfo) Reset() {
-	*x = QuoteInfo{}
-	mi := &file_mm_v1_mm_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *QuoteInfo) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*QuoteInfo) ProtoMessage() {}
-
-func (x *QuoteInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_mm_v1_mm_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use QuoteInfo.ProtoReflect.Descriptor instead.
-func (*QuoteInfo) Descriptor() ([]byte, []int) {
-	return file_mm_v1_mm_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *QuoteInfo) GetTokenIn() string {
-	if x != nil {
-		return x.TokenIn
-	}
-	return ""
-}
-
-func (x *QuoteInfo) GetTokenOut() string {
-	if x != nil {
-		return x.TokenOut
-	}
-	return ""
-}
-
-func (x *QuoteInfo) GetAmountIn() string {
-	if x != nil {
-		return x.AmountIn
-	}
-	return ""
-}
-
-func (x *QuoteInfo) GetAmountOut() string {
-	if x != nil {
-		return x.AmountOut
-	}
-	return ""
-}
-
-func (x *QuoteInfo) GetAmountOutMinimum() string {
-	if x != nil {
-		return x.AmountOutMinimum
-	}
-	return ""
-}
-
-func (x *QuoteInfo) GetPrice() string {
-	if x != nil {
-		return x.Price
-	}
-	return ""
-}
-
-func (x *QuoteInfo) GetPriceImpact() string {
-	if x != nil {
-		return x.PriceImpact
-	}
-	return ""
-}
-
 // SignedOrder signed order (aligned with contract IQuote.MMQuote structure)
 type SignedOrder struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Signer        string                 `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`                        // MM signer address
-	Pool          string                 `protobuf:"bytes,2,opt,name=pool,proto3" json:"pool,omitempty"`                            // DarkPool Pool contract address
-	Nonce         string                 `protobuf:"bytes,3,opt,name=nonce,proto3" json:"nonce,omitempty"`                          // Anti-replay nonce (uint256 string)
-	AmountIn      string                 `protobuf:"bytes,4,opt,name=amount_in,json=amountIn,proto3" json:"amount_in,omitempty"`    // Input amount (18 decimals)
-	AmountOut     string                 `protobuf:"bytes,5,opt,name=amount_out,json=amountOut,proto3" json:"amount_out,omitempty"` // Minimum output amount (18 decimals)
-	Deadline      int64                  `protobuf:"varint,6,opt,name=deadline,proto3" json:"deadline,omitempty"`                   // Expiration timestamp (Unix seconds)
-	ExtraData     []byte                 `protobuf:"bytes,7,opt,name=extra_data,json=extraData,proto3" json:"extra_data,omitempty"` // Optional opaque bytes (demo uses empty bytes)
-	Signature     []byte                 `protobuf:"bytes,8,opt,name=signature,proto3" json:"signature,omitempty"`                  // EIP-712 signature (65 bytes)
+	Signer        string                 `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`                           // MM signer address
+	RfqManager    string                 `protobuf:"bytes,2,opt,name=rfq_manager,json=rfqManager,proto3" json:"rfq_manager,omitempty"` // RFQ Manager contract address
+	Nonce         string                 `protobuf:"bytes,3,opt,name=nonce,proto3" json:"nonce,omitempty"`                             // Anti-replay nonce (uint256 string)
+	AmountIn      string                 `protobuf:"bytes,4,opt,name=amount_in,json=amountIn,proto3" json:"amount_in,omitempty"`       // Input amount (after fee deduction)
+	AmountOut     string                 `protobuf:"bytes,5,opt,name=amount_out,json=amountOut,proto3" json:"amount_out,omitempty"`    // Minimum output amount
+	Deadline      int64                  `protobuf:"varint,6,opt,name=deadline,proto3" json:"deadline,omitempty"`                      // Expiration timestamp (Unix seconds)
+	ExtraData     []byte                 `protobuf:"bytes,7,opt,name=extra_data,json=extraData,proto3" json:"extra_data,omitempty"`    // Extra data: abi.encode(v3Pool, zeroForOne, sqrtPriceLimit, callbackData)
+	Signature     []byte                 `protobuf:"bytes,8,opt,name=signature,proto3" json:"signature,omitempty"`                     // EIP-712 signature (65 bytes)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SignedOrder) Reset() {
 	*x = SignedOrder{}
-	mi := &file_mm_v1_mm_proto_msgTypes[8]
+	mi := &file_mm_v1_mm_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1078,7 +972,7 @@ func (x *SignedOrder) String() string {
 func (*SignedOrder) ProtoMessage() {}
 
 func (x *SignedOrder) ProtoReflect() protoreflect.Message {
-	mi := &file_mm_v1_mm_proto_msgTypes[8]
+	mi := &file_mm_v1_mm_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1091,7 +985,7 @@ func (x *SignedOrder) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SignedOrder.ProtoReflect.Descriptor instead.
 func (*SignedOrder) Descriptor() ([]byte, []int) {
-	return file_mm_v1_mm_proto_rawDescGZIP(), []int{8}
+	return file_mm_v1_mm_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *SignedOrder) GetSigner() string {
@@ -1101,9 +995,9 @@ func (x *SignedOrder) GetSigner() string {
 	return ""
 }
 
-func (x *SignedOrder) GetPool() string {
+func (x *SignedOrder) GetRfqManager() string {
 	if x != nil {
-		return x.Pool
+		return x.RfqManager
 	}
 	return ""
 }
@@ -1164,7 +1058,7 @@ type QuoteReject struct {
 
 func (x *QuoteReject) Reset() {
 	*x = QuoteReject{}
-	mi := &file_mm_v1_mm_proto_msgTypes[9]
+	mi := &file_mm_v1_mm_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1176,7 +1070,7 @@ func (x *QuoteReject) String() string {
 func (*QuoteReject) ProtoMessage() {}
 
 func (x *QuoteReject) ProtoReflect() protoreflect.Message {
-	mi := &file_mm_v1_mm_proto_msgTypes[9]
+	mi := &file_mm_v1_mm_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1189,7 +1083,7 @@ func (x *QuoteReject) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QuoteReject.ProtoReflect.Descriptor instead.
 func (*QuoteReject) Descriptor() ([]byte, []int) {
-	return file_mm_v1_mm_proto_rawDescGZIP(), []int{9}
+	return file_mm_v1_mm_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *QuoteReject) GetQuoteId() string {
@@ -1238,7 +1132,7 @@ type Heartbeat struct {
 
 func (x *Heartbeat) Reset() {
 	*x = Heartbeat{}
-	mi := &file_mm_v1_mm_proto_msgTypes[10]
+	mi := &file_mm_v1_mm_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1250,7 +1144,7 @@ func (x *Heartbeat) String() string {
 func (*Heartbeat) ProtoMessage() {}
 
 func (x *Heartbeat) ProtoReflect() protoreflect.Message {
-	mi := &file_mm_v1_mm_proto_msgTypes[10]
+	mi := &file_mm_v1_mm_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1263,7 +1157,7 @@ func (x *Heartbeat) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Heartbeat.ProtoReflect.Descriptor instead.
 func (*Heartbeat) Descriptor() ([]byte, []int) {
-	return file_mm_v1_mm_proto_rawDescGZIP(), []int{10}
+	return file_mm_v1_mm_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *Heartbeat) GetPing() bool {
@@ -1292,7 +1186,7 @@ type Error struct {
 
 func (x *Error) Reset() {
 	*x = Error{}
-	mi := &file_mm_v1_mm_proto_msgTypes[11]
+	mi := &file_mm_v1_mm_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1304,7 +1198,7 @@ func (x *Error) String() string {
 func (*Error) ProtoMessage() {}
 
 func (x *Error) ProtoReflect() protoreflect.Message {
-	mi := &file_mm_v1_mm_proto_msgTypes[11]
+	mi := &file_mm_v1_mm_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1317,7 +1211,7 @@ func (x *Error) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Error.ProtoReflect.Descriptor instead.
 func (*Error) Descriptor() ([]byte, []int) {
-	return file_mm_v1_mm_proto_rawDescGZIP(), []int{11}
+	return file_mm_v1_mm_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *Error) GetCode() ErrorCode {
@@ -1381,7 +1275,7 @@ const file_mm_v1_mm_proto_rawDesc = "" +
 	"\n" +
 	"PriceLevel\x12\x14\n" +
 	"\x05price\x18\x01 \x01(\tR\x05price\x12\x16\n" +
-	"\x06amount\x18\x02 \x01(\tR\x06amount\"\xa1\x02\n" +
+	"\x06amount\x18\x02 \x01(\tR\x06amount\"\x92\x02\n" +
 	"\fQuoteRequest\x12\x19\n" +
 	"\bquote_id\x18\x01 \x01(\tR\aquoteId\x12\x19\n" +
 	"\bchain_id\x18\x02 \x01(\x04R\achainId\x12\x13\n" +
@@ -1391,30 +1285,19 @@ const file_mm_v1_mm_proto_rawDesc = "" +
 	"\tamount_in\x18\x06 \x01(\tR\bamountIn\x12\x1c\n" +
 	"\trecipient\x18\a \x01(\tR\trecipient\x12\x14\n" +
 	"\x05nonce\x18\b \x01(\tR\x05nonce\x12\x1a\n" +
-	"\bdeadline\x18\t \x01(\x03R\bdeadline\x12!\n" +
-	"\fslippage_bps\x18\n" +
-	" \x01(\rR\vslippageBps\"\xf9\x01\n" +
+	"\bdeadline\x18\t \x01(\x03R\bdeadline\x12\x12\n" +
+	"\x04from\x18\n" +
+	" \x01(\tR\x04from\"\xb0\x01\n" +
 	"\rQuoteResponse\x12\x19\n" +
 	"\bquote_id\x18\x01 \x01(\tR\aquoteId\x12\x19\n" +
 	"\bchain_id\x18\x02 \x01(\x04R\achainId\x12\x13\n" +
 	"\x05mm_id\x18\x03 \x01(\tR\x04mmId\x12*\n" +
-	"\x06status\x18\x04 \x01(\x0e2\x12.mm.v1.QuoteStatusR\x06status\x12&\n" +
-	"\x05quote\x18\x05 \x01(\v2\x10.mm.v1.QuoteInfoR\x05quote\x12(\n" +
-	"\x05order\x18\x06 \x01(\v2\x12.mm.v1.SignedOrderR\x05order\x12\x1f\n" +
-	"\vvalid_until\x18\a \x01(\x03R\n" +
-	"validUntil\"\xe6\x01\n" +
-	"\tQuoteInfo\x12\x19\n" +
-	"\btoken_in\x18\x01 \x01(\tR\atokenIn\x12\x1b\n" +
-	"\ttoken_out\x18\x02 \x01(\tR\btokenOut\x12\x1b\n" +
-	"\tamount_in\x18\x03 \x01(\tR\bamountIn\x12\x1d\n" +
-	"\n" +
-	"amount_out\x18\x04 \x01(\tR\tamountOut\x12,\n" +
-	"\x12amount_out_minimum\x18\x05 \x01(\tR\x10amountOutMinimum\x12\x14\n" +
-	"\x05price\x18\x06 \x01(\tR\x05price\x12!\n" +
-	"\fprice_impact\x18\a \x01(\tR\vpriceImpact\"\xe4\x01\n" +
+	"\x06status\x18\x04 \x01(\x0e2\x12.mm.v1.QuoteStatusR\x06status\x12(\n" +
+	"\x05order\x18\x05 \x01(\v2\x12.mm.v1.SignedOrderR\x05order\"\xf1\x01\n" +
 	"\vSignedOrder\x12\x16\n" +
-	"\x06signer\x18\x01 \x01(\tR\x06signer\x12\x12\n" +
-	"\x04pool\x18\x02 \x01(\tR\x04pool\x12\x14\n" +
+	"\x06signer\x18\x01 \x01(\tR\x06signer\x12\x1f\n" +
+	"\vrfq_manager\x18\x02 \x01(\tR\n" +
+	"rfqManager\x12\x14\n" +
 	"\x05nonce\x18\x03 \x01(\tR\x05nonce\x12\x1b\n" +
 	"\tamount_in\x18\x04 \x01(\tR\bamountIn\x12\x1d\n" +
 	"\n" +
@@ -1459,7 +1342,7 @@ const file_mm_v1_mm_proto_rawDesc = "" +
 	"\x1eREJECT_REASON_AMOUNT_TOO_SMALL\x10\x04\x12\"\n" +
 	"\x1eREJECT_REASON_AMOUNT_TOO_LARGE\x10\x05\x12\x1e\n" +
 	"\x1aREJECT_REASON_RATE_LIMITED\x10\x06\x12 \n" +
-	"\x1cREJECT_REASON_INTERNAL_ERROR\x10\a*\x9e\x02\n" +
+	"\x1cREJECT_REASON_INTERNAL_ERROR\x10\a*\xbb\x02\n" +
 	"\tErrorCode\x12\x1a\n" +
 	"\x16ERROR_CODE_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aERROR_CODE_INVALID_MESSAGE\x10\x01\x12 \n" +
@@ -1469,7 +1352,8 @@ const file_mm_v1_mm_proto_rawDesc = "" +
 	"\x19ERROR_CODE_NOT_REGISTERED\x10\x05\x12!\n" +
 	"\x1dERROR_CODE_DUPLICATE_REGISTER\x10\x06\x12\x1b\n" +
 	"\x17ERROR_CODE_UNAUTHORIZED\x10\a\x12#\n" +
-	"\x1fERROR_CODE_PAIR_NOT_WHITELISTED\x10\bB@Z>github.com/ThetaSpace/DarkPool-Market-Maker-Example/mm/v1;mmv1b\x06proto3"
+	"\x1fERROR_CODE_PAIR_NOT_WHITELISTED\x10\b\x12\x1b\n" +
+	"\x17ERROR_CODE_RATE_LIMITED\x10\tB@Z>github.com/ThetaSpace/DarkPool-Market-Maker-Example/mm/v1;mmv1b\x06proto3"
 
 var (
 	file_mm_v1_mm_proto_rawDescOnce sync.Once
@@ -1484,7 +1368,7 @@ func file_mm_v1_mm_proto_rawDescGZIP() []byte {
 }
 
 var file_mm_v1_mm_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_mm_v1_mm_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_mm_v1_mm_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_mm_v1_mm_proto_goTypes = []any{
 	(MessageType)(0),         // 0: mm.v1.MessageType
 	(QuoteStatus)(0),         // 1: mm.v1.QuoteStatus
@@ -1497,34 +1381,32 @@ var file_mm_v1_mm_proto_goTypes = []any{
 	(*PriceLevel)(nil),       // 8: mm.v1.PriceLevel
 	(*QuoteRequest)(nil),     // 9: mm.v1.QuoteRequest
 	(*QuoteResponse)(nil),    // 10: mm.v1.QuoteResponse
-	(*QuoteInfo)(nil),        // 11: mm.v1.QuoteInfo
-	(*SignedOrder)(nil),      // 12: mm.v1.SignedOrder
-	(*QuoteReject)(nil),      // 13: mm.v1.QuoteReject
-	(*Heartbeat)(nil),        // 14: mm.v1.Heartbeat
-	(*Error)(nil),            // 15: mm.v1.Error
+	(*SignedOrder)(nil),      // 11: mm.v1.SignedOrder
+	(*QuoteReject)(nil),      // 12: mm.v1.QuoteReject
+	(*Heartbeat)(nil),        // 13: mm.v1.Heartbeat
+	(*Error)(nil),            // 14: mm.v1.Error
 }
 var file_mm_v1_mm_proto_depIdxs = []int32{
 	0,  // 0: mm.v1.Message.type:type_name -> mm.v1.MessageType
 	7,  // 1: mm.v1.Message.depth_snapshot:type_name -> mm.v1.DepthSnapshot
 	9,  // 2: mm.v1.Message.quote_request:type_name -> mm.v1.QuoteRequest
 	10, // 3: mm.v1.Message.quote_response:type_name -> mm.v1.QuoteResponse
-	13, // 4: mm.v1.Message.quote_reject:type_name -> mm.v1.QuoteReject
-	14, // 5: mm.v1.Message.heartbeat:type_name -> mm.v1.Heartbeat
-	15, // 6: mm.v1.Message.error:type_name -> mm.v1.Error
+	12, // 4: mm.v1.Message.quote_reject:type_name -> mm.v1.QuoteReject
+	13, // 5: mm.v1.Message.heartbeat:type_name -> mm.v1.Heartbeat
+	14, // 6: mm.v1.Message.error:type_name -> mm.v1.Error
 	5,  // 7: mm.v1.Message.connection_ack:type_name -> mm.v1.ConnectionAck
 	6,  // 8: mm.v1.ConnectionAck.config:type_name -> mm.v1.ConnectionConfig
 	8,  // 9: mm.v1.DepthSnapshot.bids:type_name -> mm.v1.PriceLevel
 	8,  // 10: mm.v1.DepthSnapshot.asks:type_name -> mm.v1.PriceLevel
 	1,  // 11: mm.v1.QuoteResponse.status:type_name -> mm.v1.QuoteStatus
-	11, // 12: mm.v1.QuoteResponse.quote:type_name -> mm.v1.QuoteInfo
-	12, // 13: mm.v1.QuoteResponse.order:type_name -> mm.v1.SignedOrder
-	2,  // 14: mm.v1.QuoteReject.reason:type_name -> mm.v1.RejectReason
-	3,  // 15: mm.v1.Error.code:type_name -> mm.v1.ErrorCode
-	16, // [16:16] is the sub-list for method output_type
-	16, // [16:16] is the sub-list for method input_type
-	16, // [16:16] is the sub-list for extension type_name
-	16, // [16:16] is the sub-list for extension extendee
-	0,  // [0:16] is the sub-list for field type_name
+	11, // 12: mm.v1.QuoteResponse.order:type_name -> mm.v1.SignedOrder
+	2,  // 13: mm.v1.QuoteReject.reason:type_name -> mm.v1.RejectReason
+	3,  // 14: mm.v1.Error.code:type_name -> mm.v1.ErrorCode
+	15, // [15:15] is the sub-list for method output_type
+	15, // [15:15] is the sub-list for method input_type
+	15, // [15:15] is the sub-list for extension type_name
+	15, // [15:15] is the sub-list for extension extendee
+	0,  // [0:15] is the sub-list for field type_name
 }
 
 func init() { file_mm_v1_mm_proto_init() }
@@ -1547,7 +1429,7 @@ func file_mm_v1_mm_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_mm_v1_mm_proto_rawDesc), len(file_mm_v1_mm_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   12,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

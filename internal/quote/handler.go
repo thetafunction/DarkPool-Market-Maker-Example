@@ -111,11 +111,10 @@ func (h *Handler) HandleQuoteRequest(ctx context.Context, req *mmv1.QuoteRequest
 
 	// 6. Call strategy to calculate quote
 	quoteParams := &QuoteParams{
-		ChainID:     req.ChainId,
-		TokenIn:     tokenIn,
-		TokenOut:    tokenOut,
-		AmountIn:    amountIn,
-		SlippageBps: req.SlippageBps,
+		ChainID:  req.ChainId,
+		TokenIn:  tokenIn,
+		TokenOut: tokenOut,
+		AmountIn: amountIn,
 	}
 
 	quoteResult, err := h.strategy.CalculateQuote(ctx, quoteParams)
@@ -163,33 +162,21 @@ func (h *Handler) HandleQuoteRequest(ctx context.Context, req *mmv1.QuoteRequest
 	h.logger.Info("quote signed successfully", "quoteId", req.QuoteId)
 
 	// 12. Build response (using native decimals)
-	validUntil := time.Now().Add(h.cfg.Quote.ValidDuration).UnixMilli()
-
 	response := &mmv1.QuoteResponse{
 		QuoteId: req.QuoteId,
 		ChainId: req.ChainId,
 		MmId:    strings.ToLower(h.signer.GetAddress().Hex()),
 		Status:  mmv1.QuoteStatus_QUOTE_STATUS_SUCCESS,
-		Quote: &mmv1.QuoteInfo{
-			TokenIn:          strings.ToLower(req.TokenIn),
-			TokenOut:         strings.ToLower(req.TokenOut),
-			AmountIn:         req.AmountIn,
-			AmountOut:        quoteResult.AmountOut.String(),        // Native decimals
-			AmountOutMinimum: quoteResult.AmountOutMinimum.String(), // Native decimals
-			Price:            quoteResult.ExecutionPrice.String(),
-			PriceImpact:      fmt.Sprintf("%.4f", quoteResult.PriceImpact),
-		},
 		Order: &mmv1.SignedOrder{
-			Signer:    strings.ToLower(h.signer.GetAddress().Hex()),
-			Pool:      strings.ToLower(domain.VerifyingContract),
-			Nonce:     req.Nonce,
-			AmountIn:  amountIn.String(),                     // Native decimals
-			AmountOut: quoteResult.AmountOutMinimum.String(), // Native decimals (matches signature)
-			Deadline:  req.Deadline,
-			ExtraData: extraData,
-			Signature: signature,
+			Signer:     strings.ToLower(h.signer.GetAddress().Hex()),
+			RfqManager: strings.ToLower(domain.VerifyingContract),
+			Nonce:      req.Nonce,
+			AmountIn:   amountIn.String(),                     // Native decimals
+			AmountOut:  quoteResult.AmountOutMinimum.String(), // Native decimals (matches signature)
+			Deadline:   req.Deadline,
+			ExtraData:  extraData,
+			Signature:  signature,
 		},
-		ValidUntil: validUntil,
 	}
 
 	return &mmv1.Message{

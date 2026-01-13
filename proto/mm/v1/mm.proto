@@ -91,11 +91,11 @@ message QuoteRequest {
   string mm_id = 3;
   string token_in = 4;        // Input token address
   string token_out = 5;       // Output token address
-  string amount_in = 6;       // Input amount (uint256 string, 18 decimals)
+  string amount_in = 6;       // Input amount (uint256 string)
   string recipient = 7;       // User recipient address
   string nonce = 8;           // Anti-replay nonce
   int64 deadline = 9;         // Expiration timestamp (Unix seconds)
-  uint32 slippage_bps = 10;   // Slippage tolerance (basis points)
+  string from = 10;           // Sender address
 }
 
 // ============================================================================
@@ -108,9 +108,7 @@ message QuoteResponse {
   uint64 chain_id = 2;
   string mm_id = 3;
   QuoteStatus status = 4;
-  QuoteInfo quote = 5;        // Quote info (for display)
-  SignedOrder order = 6;      // Signed order (for on-chain execution)
-  int64 valid_until = 7;      // Quote validity period (Unix milliseconds)
+  SignedOrder order = 5;      // Signed order (for on-chain execution)
 }
 
 // QuoteStatus quote status
@@ -120,26 +118,16 @@ enum QuoteStatus {
   QUOTE_STATUS_FAILED = 2;
 }
 
-// QuoteInfo quote information (for frontend display)
-message QuoteInfo {
-  string token_in = 1;
-  string token_out = 2;
-  string amount_in = 3;
-  string amount_out = 4;
-  string amount_out_minimum = 5;
-  string price = 6;              // Execution price
-  string price_impact = 7;       // Price impact percentage
-}
 
 // SignedOrder signed order (aligned with contract IQuote.MMQuote structure)
 message SignedOrder {
   string signer = 1;              // MM signer address
-  string pool = 2;                // DarkPool Pool contract address
+  string rfq_manager = 2;         // RFQ Manager contract address
   string nonce = 3;               // Anti-replay nonce (uint256 string)
-  string amount_in = 4;           // Input amount (18 decimals)
-  string amount_out = 5;          // Minimum output amount (18 decimals)
+  string amount_in = 4;           // Input amount (after fee deduction)
+  string amount_out = 5;          // Minimum output amount
   int64 deadline = 6;             // Expiration timestamp (Unix seconds)
-  bytes extra_data = 7;           // Optional opaque bytes (demo uses empty bytes)
+  bytes extra_data = 7;           // Extra data: abi.encode(v3Pool, zeroForOne, sqrtPriceLimit, callbackData)
   bytes signature = 8;            // EIP-712 signature (65 bytes)
 }
 
@@ -200,4 +188,5 @@ enum ErrorCode {
   ERROR_CODE_DUPLICATE_REGISTER = 6;
   ERROR_CODE_UNAUTHORIZED = 7;          // Token verification failed
   ERROR_CODE_PAIR_NOT_WHITELISTED = 8;  // Pair not whitelisted
+  ERROR_CODE_RATE_LIMITED = 9;          // Rate limited (exceeded rate limit)
 }

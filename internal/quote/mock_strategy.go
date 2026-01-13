@@ -71,7 +71,7 @@ func (s *MockStrategy) CalculateQuote(ctx context.Context, params *QuoteParams) 
 	}
 
 	// Build result
-	result := NewQuoteResult(amountOut, params.SlippageBps)
+	result := NewQuoteResult(amountOut)
 	result.ExecutionPrice = price
 	result.PriceImpact = float64(s.SpreadBps) / 100 // Simplified: spread equals price impact
 
