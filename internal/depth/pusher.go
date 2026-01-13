@@ -10,6 +10,7 @@ import (
 
 	"github.com/ThetaSpace/DarkPool-Market-Maker-Example/internal/config"
 	"github.com/ThetaSpace/DarkPool-Market-Maker-Example/internal/quote"
+	"github.com/ThetaSpace/DarkPool-Market-Maker-Example/internal/signer"
 	"github.com/ThetaSpace/DarkPool-Market-Maker-Example/internal/ws"
 	mmv1 "github.com/ThetaSpace/DarkPool-Market-Maker-Example/mm/v1"
 )
@@ -20,6 +21,7 @@ type Pusher struct {
 	wsClient     ws.WSClient
 	provider     DepthProvider
 	quoteHandler *quote.Handler
+	signer       signer.Signer
 	cfg          *config.Config
 	logger       *slog.Logger
 
@@ -33,6 +35,7 @@ func NewPusher(
 	wsClient ws.WSClient,
 	provider DepthProvider,
 	quoteHandler *quote.Handler,
+	s signer.Signer,
 	cfg *config.Config,
 	logger *slog.Logger,
 ) *Pusher {
@@ -40,6 +43,7 @@ func NewPusher(
 		wsClient:     wsClient,
 		provider:     provider,
 		quoteHandler: quoteHandler,
+		signer:       s,
 		cfg:          cfg,
 		logger:       logger.With("component", "DepthPusher"),
 	}
@@ -119,14 +123,8 @@ func (p *Pusher) pushDepthSnapshot(pair config.PairConfig) error {
 		return fmt.Errorf("failed to get depth: %w", err)
 	}
 
-	// Get EIP712 Domain for MM address
-	domain := p.cfg.GetEIP712Domain(pair.ChainID)
-	if domain == nil {
-		return fmt.Errorf("eip712 domain not found for chain %d", pair.ChainID)
-	}
-
 	// Build depth snapshot
-	snapshot := p.buildDepthSnapshot(orderBook, pair, domain)
+	snapshot := p.buildDepthSnapshot(orderBook, pair)
 
 	// Build message
 	msg := &mmv1.Message{
@@ -160,7 +158,7 @@ func (p *Pusher) pushDepthSnapshot(pair config.PairConfig) error {
 // Example: tokenA = WETH (18 decimals), tokenB = USDC (6 decimals), 1 WETH = 3400 USDC
 //   - Price = 3400 * 10^6 / 10^18 = 3.4e-9 = "0.0000000034"
 //   - Amount = 3.28e18 = "3280000000000000000"
-func (p *Pusher) buildDepthSnapshot(ob *OrderBook, pair config.PairConfig, domain *config.EIP712Domain) *mmv1.DepthSnapshot {
+func (p *Pusher) buildDepthSnapshot(ob *OrderBook, pair config.PairConfig) *mmv1.DepthSnapshot {
 	// Build asks and bids
 	// Price: wei/wei format, Amount: tokenA native decimals
 	asks := make([]*mmv1.PriceLevel, len(ob.Asks))
@@ -182,7 +180,7 @@ func (p *Pusher) buildDepthSnapshot(ob *OrderBook, pair config.PairConfig, domai
 	return &mmv1.DepthSnapshot{
 		ChainId: pair.ChainID,
 		PairId:  pair.PairID,
-		MmId:    strings.ToLower(domain.VerifyingContract),
+		MmId:    strings.ToLower(p.signer.GetAddress().Hex()),
 		TokenA:  strings.ToLower(pair.BaseToken),
 		TokenB:  strings.ToLower(pair.QuoteToken),
 		Bids:    bids,

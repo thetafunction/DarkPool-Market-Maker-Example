@@ -82,7 +82,7 @@ func New(cfg *config.Config, logger *slog.Logger) (*Runner, error) {
 	logger.Info("Depth provider initialized (mock)")
 
 	// 7. Initialize depth pusher
-	r.depthPusher = depth.NewPusher(r.wsClient, depthProvider, r.quoteHandler, cfg, logger)
+	r.depthPusher = depth.NewPusher(r.wsClient, depthProvider, r.quoteHandler, s, cfg, logger)
 
 	return r, nil
 }
