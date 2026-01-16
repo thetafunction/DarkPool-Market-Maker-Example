@@ -35,9 +35,9 @@ keccak256(abi.encode(
 
 ```go
 type MMQuote struct {
-    RFQManager        address // Verifying contract address
-    From        address // User address
-    To          address // User address
+    RFQManager  address // Verifying contract address
+    From        address // User address (transaction initiator)
+    To          address // User address (token recipient)
     InputToken  address // Input token address
     OutputToken address // Output token address
     AmountIn    uint256 // Input amount (native decimals)
@@ -84,7 +84,7 @@ This demo does not set it and uses empty bytes.
 extraData := []byte{} // Optional opaque bytes
 
 mmQuote := &MMQuote{
-    RFQManager:        verifyingContract,
+    RFQManager:  verifyingContract,
     From:        userAddress,
     To:          userAddress,
     InputToken:  tokenIn,
@@ -101,12 +101,12 @@ mmQuote := &MMQuote{
 
 ```go
 // TypeHash
-typeHash = keccak256("MMQuote(address rfqManager,address from,address to,address inputToken,address outputToken,uint256 amountIn,uint256 amountOut,uint256 deadline,uint256 nonce,bytes32 extraDataHash)")
+typeHash = keccak256("MMQuote(address rfq_manager,address from,address to,address inputToken,address outputToken,uint256 amountIn,uint256 amountOut,uint256 deadline,uint256 nonce,bytes32 extraDataHash)")
 
 // Struct Hash
 structHash = keccak256(abi.encode(
     typeHash,
-    rfqManager,
+    rfq_manager,
     from,
     to,
     inputToken,

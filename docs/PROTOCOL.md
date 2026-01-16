@@ -151,10 +151,10 @@ message QuoteRequest {
   string token_in = 4;
   string token_out = 5;
   string amount_in = 6;  // native decimals
-  string recipient = 7;
-  string nonce = 8;
-  int64 deadline = 9;
-  uint32 slippage_bps = 10;
+  string from = 7;
+  string recipient = 8;
+  string nonce = 9;
+  int64 deadline = 10;
 }
 ```
 
@@ -174,19 +174,7 @@ message QuoteResponse {
   uint64 chain_id = 2;
   string mm_id = 3;
   QuoteStatus status = 4;
-  QuoteInfo quote = 5;
-  SignedOrder order = 6;
-  int64 valid_until = 7;  // millisecond timestamp
-}
-
-message QuoteInfo {
-  string token_in = 1;
-  string token_out = 2;
-  string amount_in = 3;          // native decimals
-  string amount_out = 4;         // native decimals
-  string amount_out_minimum = 5; // native decimals
-  string price = 6;
-  string price_impact = 7;
+  SignedOrder order = 5;
 }
 
 message SignedOrder {
