@@ -191,7 +191,7 @@ message QuoteInfo {
 
 message SignedOrder {
   string signer = 1;
-  string pool = 2;       // verifying contract address
+  string rfq_manager = 2;       // verifying contract address
   string nonce = 3;
   string amount_in = 4;   // native decimals
   string amount_out = 5;  // native decimals (matches signature)

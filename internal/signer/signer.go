@@ -91,7 +91,7 @@ func (s *signer) SignMMQuote(chainID uint64, quote *MMQuote) ([]byte, error) {
 	// Get verifying contract domain separator
 	domainSeparator, ok := s.domainManager.GetPoolDomainSeparator(chainID)
 	if !ok {
-		return nil, fmt.Errorf("pool domain not configured for chainId %d", chainID)
+		return nil, fmt.Errorf("RFQ Manager not configured for chainId %d", chainID)
 	}
 
 	// Calculate struct hash
@@ -132,7 +132,7 @@ func hashMMQuote(quote *MMQuote) ([]byte, error) {
 	// Build arguments (order matches contract MMQUOTE_SIGNATURE_HASH fields)
 	args := abi.Arguments{
 		{Type: bytes32Ty}, // typeHash
-		{Type: addressTy}, // pool
+		{Type: addressTy}, // rfqManager
 		{Type: addressTy}, // from
 		{Type: addressTy}, // to
 		{Type: addressTy}, // inputToken
@@ -150,7 +150,7 @@ func hashMMQuote(quote *MMQuote) ([]byte, error) {
 	// Pack encoding
 	encoded, err := args.Pack(
 		MMQuoteTypeHash,
-		quote.Pool,
+		quote.RFQManager,
 		quote.From,
 		quote.To,
 		quote.InputToken,

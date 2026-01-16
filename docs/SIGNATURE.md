@@ -12,7 +12,7 @@ Each chain's verifying contract has its own EIP-712 Domain:
 
 ```go
 type EIP712Domain struct {
-    Name              string  // "DarkPool Domain"
+    Name              string  // "DarkPool RFQ Manager"
     Version           string  // "1"
     ChainID           uint256 // Chain ID
     VerifyingContract address // Verifying contract address
@@ -35,7 +35,7 @@ keccak256(abi.encode(
 
 ```go
 type MMQuote struct {
-    Pool        address // Verifying contract address
+    RFQManager        address // Verifying contract address
     From        address // User address
     To          address // User address
     InputToken  address // Input token address
@@ -52,7 +52,7 @@ type MMQuote struct {
 
 | Field | Description |
 |-------|-------------|
-| Pool | Verifying contract address, same as Domain's verifyingContract |
+| RFQManager | Verifying contract address, same as Domain's verifyingContract |
 | From | User address (transaction initiator) |
 | To | User address (token recipient), usually same as From |
 | InputToken | Token address the user is selling (0x0 for native token) |
@@ -84,7 +84,7 @@ This demo does not set it and uses empty bytes.
 extraData := []byte{} // Optional opaque bytes
 
 mmQuote := &MMQuote{
-    Pool:        verifyingContract,
+    RFQManager:        verifyingContract,
     From:        userAddress,
     To:          userAddress,
     InputToken:  tokenIn,
@@ -101,12 +101,12 @@ mmQuote := &MMQuote{
 
 ```go
 // TypeHash
-typeHash = keccak256("MMQuote(address pool,address from,address to,address inputToken,address outputToken,uint256 amountIn,uint256 amountOut,uint256 deadline,uint256 nonce,bytes32 extraDataHash)")
+typeHash = keccak256("MMQuote(address rfqManager,address from,address to,address inputToken,address outputToken,uint256 amountIn,uint256 amountOut,uint256 deadline,uint256 nonce,bytes32 extraDataHash)")
 
 // Struct Hash
 structHash = keccak256(abi.encode(
     typeHash,
-    pool,
+    rfqManager,
     from,
     to,
     inputToken,

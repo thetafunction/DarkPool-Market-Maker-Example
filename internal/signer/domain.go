@@ -8,9 +8,9 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-// DarkPool Pool Domain default values
+// DarkPool RFQ Manager Domain default values
 const (
-	DefaultDomainName    = "DarkPool Pool"
+	DefaultDomainName    = "RFQ Manager"
 	DefaultDomainVersion = "1"
 )
 
@@ -47,21 +47,21 @@ func (d *EIP712Domain) DomainSeparator() []byte {
 	return crypto.Keccak256(encoded)
 }
 
-// DomainManager manages multi-chain DarkPool Pool EIP-712 Domains
+// DomainManager manages multi-chain DarkPool RFQ Manager EIP-712 Domains
 type DomainManager struct {
-	poolDomains map[uint64]*EIP712Domain // chainId -> DarkPool Pool domain
+	rfqManagerDomains map[uint64]*EIP712Domain // chainId -> DarkPool RFQ Manager domain
 }
 
 // NewDomainManager creates a Domain manager
 func NewDomainManager() *DomainManager {
 	return &DomainManager{
-		poolDomains: make(map[uint64]*EIP712Domain),
+		rfqManagerDomains: make(map[uint64]*EIP712Domain),
 	}
 }
 
-// AddPoolDomain adds a DarkPool Pool Domain configuration
+// AddPoolDomain adds a DarkPool RFQ Manager Domain configuration
 func (m *DomainManager) AddPoolDomain(chainID uint64, poolAddr common.Address) {
-	m.poolDomains[chainID] = &EIP712Domain{
+	m.rfqManagerDomains[chainID] = &EIP712Domain{
 		Name:              DefaultDomainName,
 		Version:           DefaultDomainVersion,
 		ChainID:           big.NewInt(int64(chainID)),
@@ -69,7 +69,7 @@ func (m *DomainManager) AddPoolDomain(chainID uint64, poolAddr common.Address) {
 	}
 }
 
-// AddPoolDomainWithConfig adds a DarkPool Pool Domain with full configuration
+// AddPoolDomainWithConfig adds a DarkPool RFQ Manager Domain with full configuration
 // Supports custom name and version (uses defaults if empty)
 func (m *DomainManager) AddPoolDomainWithConfig(chainID uint64, name, version, poolAddr string) {
 	if name == "" {
@@ -78,7 +78,7 @@ func (m *DomainManager) AddPoolDomainWithConfig(chainID uint64, name, version, p
 	if version == "" {
 		version = DefaultDomainVersion
 	}
-	m.poolDomains[chainID] = &EIP712Domain{
+	m.rfqManagerDomains[chainID] = &EIP712Domain{
 		Name:              name,
 		Version:           version,
 		ChainID:           big.NewInt(int64(chainID)),
@@ -86,30 +86,30 @@ func (m *DomainManager) AddPoolDomainWithConfig(chainID uint64, name, version, p
 	}
 }
 
-// GetPoolDomain gets the DarkPool Pool Domain for a specified chain
+// GetPoolDomain gets the DarkPool RFQ Manager Domain for a specified chain
 func (m *DomainManager) GetPoolDomain(chainID uint64) *EIP712Domain {
-	return m.poolDomains[chainID]
+	return m.rfqManagerDomains[chainID]
 }
 
-// GetPoolDomainSeparator gets the DarkPool Pool Domain Separator for a specified chain
+// GetPoolDomainSeparator gets the DarkPool RFQ Manager Domain Separator for a specified chain
 func (m *DomainManager) GetPoolDomainSeparator(chainID uint64) ([]byte, bool) {
-	domain := m.poolDomains[chainID]
+	domain := m.rfqManagerDomains[chainID]
 	if domain == nil {
 		return nil, false
 	}
 	return domain.DomainSeparator(), true
 }
 
-// HasPoolDomain checks if a DarkPool Pool Domain is configured for a specified chain
-func (m *DomainManager) HasPoolDomain(chainID uint64) bool {
-	_, ok := m.poolDomains[chainID]
+// HasRFQManagerDomain checks if a DarkPool RFQ Manager Domain is configured for a specified chain
+func (m *DomainManager) HasRFQManagerDomain(chainID uint64) bool {
+	_, ok := m.rfqManagerDomains[chainID]
 	return ok
 }
 
 // ChainIDs returns all configured chain IDs
 func (m *DomainManager) ChainIDs() []uint64 {
-	ids := make([]uint64, 0, len(m.poolDomains))
-	for id := range m.poolDomains {
+	ids := make([]uint64, 0, len(m.rfqManagerDomains))
+	for id := range m.rfqManagerDomains {
 		ids = append(ids, id)
 	}
 	return ids

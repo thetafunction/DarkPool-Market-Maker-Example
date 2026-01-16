@@ -11,7 +11,7 @@ import (
 func TestMMQuoteTypeHash(t *testing.T) {
 	// Verify TypeHash calculation is correct
 	expected := crypto.Keccak256Hash([]byte(
-		"MMQuote(address pool,address from,address to,address inputToken,address outputToken,uint256 amountIn,uint256 amountOut,uint256 deadline,uint256 nonce,bytes32 extraDataHash)",
+		"MMQuote(address rfq_manager,address from,address to,address inputToken,address outputToken,uint256 amountIn,uint256 amountOut,uint256 deadline,uint256 nonce,bytes32 extraDataHash)",
 	))
 
 	if MMQuoteTypeHash != expected {
@@ -58,10 +58,10 @@ func TestDomainManager(t *testing.T) {
 	}
 
 	// Test verifying contract domain presence
-	if !dm.HasPoolDomain(56) {
+	if !dm.HasRFQManagerDomain(56) {
 		t.Error("Domain presence for chain 56 should be true")
 	}
-	if dm.HasPoolDomain(1) {
+	if dm.HasRFQManagerDomain(1) {
 		t.Error("Domain presence for chain 1 should be false")
 	}
 
@@ -153,7 +153,7 @@ func TestSigner_SignMMQuote(t *testing.T) {
 
 	amountOut, _ := new(big.Int).SetString("600000000000000000000", 10) // 600e18
 	quote := &MMQuote{
-		Pool:        common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"),
+		RFQManager:        common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"),
 		From:        common.HexToAddress("0x1234567890123456789012345678901234567890"),
 		To:          common.HexToAddress("0x1234567890123456789012345678901234567890"),
 		InputToken:  common.HexToAddress("0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"),
@@ -196,7 +196,7 @@ func TestSigner_SignMMQuote_ChainNotConfigured(t *testing.T) {
 
 	amountOut2, _ := new(big.Int).SetString("600000000000000000000", 10) // 600e18
 	quote := &MMQuote{
-		Pool:        common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"),
+		RFQManager:        common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"),
 		From:        common.HexToAddress("0x1234567890123456789012345678901234567890"),
 		To:          common.HexToAddress("0x1234567890123456789012345678901234567890"),
 		InputToken:  common.HexToAddress("0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"),

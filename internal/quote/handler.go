@@ -139,11 +139,12 @@ func (h *Handler) HandleQuoteRequest(ctx context.Context, req *mmv1.QuoteRequest
 
 	// 10. Build MMQuote (for EIP-712 signing)
 	// Note: signing uses native decimals, from/to are both user addresses
-	userAddr := common.HexToAddress(req.Recipient)
+	from := common.HexToAddress(req.From)
+	to := common.HexToAddress(req.Recipient)
 	mmQuote := &signer.MMQuote{
-		Pool:        common.HexToAddress(domain.VerifyingContract),
-		From:        userAddr,
-		To:          userAddr,
+		RFQManager:        common.HexToAddress(domain.VerifyingContract),
+		From:        from,
+		To:          to,
 		InputToken:  common.HexToAddress(req.TokenIn),  // Use original TokenIn
 		OutputToken: common.HexToAddress(req.TokenOut), // Use original TokenOut
 		AmountIn:    amountIn,                          // Native decimals

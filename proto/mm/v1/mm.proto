@@ -92,10 +92,10 @@ message QuoteRequest {
   string token_in = 4;        // Input token address
   string token_out = 5;       // Output token address
   string amount_in = 6;       // Input amount (uint256 string)
-  string recipient = 7;       // User recipient address
-  string nonce = 8;           // Anti-replay nonce
-  int64 deadline = 9;         // Expiration timestamp (Unix seconds)
-  string from = 10;           // Sender address
+  string from = 7;            // Sender address
+  string recipient = 8;       // User recipient address
+  string nonce = 9;           // Anti-replay nonce
+  int64 deadline = 10;        // Expiration timestamp (Unix seconds)
 }
 
 // ============================================================================

@@ -11,7 +11,7 @@ import (
 // Corresponds to contract MMQUOTE_SIGNATURE_HASH
 // Important: From and To come from SwapQuote.info, they are user addresses (msg.sender), not MM signer address
 type MMQuote struct {
-	Pool        common.Address // DarkPool Pool address (EIP-712 Domain VerifyingContract)
+	RFQManager        common.Address // DarkPool RFQ Manager address (EIP-712 Domain VerifyingContract)
 	From        common.Address // Source address (SwapQuote.info.from, usually user wallet address)
 	To          common.Address // Target address (SwapQuote.info.to, usually same as From)
 	InputToken  common.Address // Input token address
@@ -26,7 +26,7 @@ type MMQuote struct {
 // MMQuoteTypeHash is the keccak256 hash of MMQuote type
 // Corresponds to contract MMQUOTE_SIGNATURE_HASH
 var MMQuoteTypeHash = crypto.Keccak256Hash([]byte(
-	"MMQuote(address pool,address from,address to,address inputToken,address outputToken," +
+	"MMQuote(address rfq_manager,address from,address to,address inputToken,address outputToken," +
 		"uint256 amountIn,uint256 amountOut,uint256 deadline,uint256 nonce,bytes32 extraDataHash)"))
 
 // WrappedNativeTokens maps chain IDs to their Wrapped Native Token addresses
