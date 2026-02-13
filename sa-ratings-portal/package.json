@@ -1,0 +1,17 @@
+{
+  "name": "sa-ratings-portal",
+  "version": "1.0.0",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "echo \"No tests configured\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Institutional Rating Portal for S&A Ratings",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

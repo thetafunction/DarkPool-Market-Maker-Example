@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>S&A Ratings | Institutional Rating Portal</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="portal">
+      <header class="masthead">
+        <p class="kicker">INSTITUTIONAL RATING PORTAL</p>
+        <h1>S&amp;A Ratings</h1>
+        <p class="subtitle">Standard &amp; Agentic Ratings</p>
+      </header>
+
+      <section class="search-panel">
+        <label for="agent-search">AGENT ID REGISTRY SEARCH</label>
+        <div class="search-row">
+          <input
+            id="agent-search"
+            name="agent-search"
+            type="search"
+            placeholder="Search by Agent ID or desk name..."
+            autocomplete="off"
+          />
+          <button id="search-btn" type="button">SEARCH</button>
+        </div>
+      </section>
+
+      <section class="registry" aria-labelledby="registry-title">
+        <div class="section-title-row">
+          <h2 id="registry-title">THE REGISTRY</h2>
+          <span id="registry-count">0 entries</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Agent ID</th>
+                <th>Desk Name</th>
+                <th>Reliability Score</th>
+                <th>Rating</th>
+                <th>Last Action</th>
+              </tr>
+            </thead>
+            <tbody id="registry-body"></tbody>
+          </table>
+        </div>
+        <p id="registry-empty" class="empty hidden">
+          No registry records match this query.
+        </p>
+      </section>
+
+      <section class="feed" aria-labelledby="feed-title">
+        <div class="section-title-row">
+          <h2 id="feed-title">RECENT RATING ACTIONS</h2>
+          <span id="feed-last-updated">sync pending</span>
+        </div>
+        <div class="feed-scroll">
+          <ul id="feed-list"></ul>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
