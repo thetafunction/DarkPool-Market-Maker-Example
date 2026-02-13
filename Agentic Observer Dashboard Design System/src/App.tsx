@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { BootSequence } from './components/BootSequence';
 import { PipBoyHeader } from './components/PipBoyHeader';
 import { PipBoyTabs, TabType } from './components/PipBoyTabs';
@@ -6,10 +6,22 @@ import { PipBoyTerminal } from './components/PipBoyTerminal';
 import { PipBoyDarkPool } from './components/PipBoyDarkPool';
 import { PipBoyGauges } from './components/PipBoyGauges';
 import { PipBoyFooter } from './components/PipBoyFooter';
-import { NeuralNetwork } from './components/NeuralNetwork';
-import { HolographicOrderBook } from './components/HolographicOrderBook';
+import { PanelErrorBoundary } from './components/PanelErrorBoundary';
 
 type ViewMode = 'RETRO' | 'NEURAL';
+
+const NeuralNetwork = lazy(() =>
+  import('./components/NeuralNetwork').then((mod) => ({ default: mod.NeuralNetwork })),
+);
+const HolographicOrderBook = lazy(() =>
+  import('./components/HolographicOrderBook').then((mod) => ({ default: mod.HolographicOrderBook })),
+);
+
+const panelFallback = (label: string) => (
+  <div className="pipboy-box p-6 h-full flex items-center justify-center">
+    <div className="text-sm dim-text">{label}</div>
+  </div>
+);
 
 export default function App() {
   const [bootComplete, setBootComplete] = useState(false);
@@ -19,6 +31,11 @@ export default function App() {
   if (!bootComplete) return <BootSequence onComplete={() => setBootComplete(true)} />;
 
   const isNeural = viewMode === 'NEURAL';
+  const contentContainerStyle: React.CSSProperties = {
+    minHeight: 0,
+    display: 'flex',
+    flexDirection: 'column',
+  };
 
   return (
     <div
@@ -27,7 +44,10 @@ export default function App() {
     >
       {!isNeural && <div className="grime-overlay"></div>}
 
-      <div className="relative z-10">
+      <div
+        className="relative z-10"
+        style={{ display: 'grid', gridTemplateRows: 'auto auto auto minmax(0,1fr) auto', minHeight: 'calc(100vh - 3rem)' }}
+      >
         <PipBoyHeader />
 
         <div className="pipboy-box p-2 mb-4 flex items-center justify-between" style={isNeural ? { borderColor: '#2c6a99' } : undefined}>
@@ -52,29 +72,87 @@ export default function App() {
 
         <PipBoyTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-        <div className="min-h-[calc(100vh-320px)]">
+        <div style={contentContainerStyle}>
           {activeTab === 'EXEC' && (
-            <div className="grid grid-cols-12 gap-4 h-[calc(100vh-320px)]">
-              <div className="col-span-5 h-full"><PipBoyTerminal /></div>
-              <div className="col-span-7 h-full flex flex-col gap-4">
-                <div className="flex-1">{isNeural ? <NeuralNetwork /> : <PipBoyDarkPool />}</div>
-                <div>{isNeural ? <HolographicOrderBook /> : <PipBoyGauges />}</div>
+            <div className="grid grid-cols-12 gap-4 h-full">
+              <div className="col-span-5 h-full">
+                <PanelErrorBoundary panelName="Terminal">
+                  <PipBoyTerminal />
+                </PanelErrorBoundary>
+              </div>
+              <div className="col-span-7 h-full flex flex-col gap-4" style={{ minHeight: 0 }}>
+                <div className="flex-1" style={{ minHeight: 0 }}>
+                  <PanelErrorBoundary panelName={isNeural ? 'Neural Network' : 'Dark Pool'}>
+                    {isNeural ? (
+                      <Suspense fallback={panelFallback('Loading neural network...')}>
+                        <NeuralNetwork />
+                      </Suspense>
+                    ) : (
+                      <PipBoyDarkPool />
+                    )}
+                  </PanelErrorBoundary>
+                </div>
+                <div className="h-full">
+                  <PanelErrorBoundary panelName={isNeural ? 'Holographic Order Book' : 'Gauges'}>
+                    {isNeural ? (
+                      <Suspense fallback={panelFallback('Loading order book...')}>
+                        <HolographicOrderBook />
+                      </Suspense>
+                    ) : (
+                      <PipBoyGauges />
+                    )}
+                  </PanelErrorBoundary>
+                </div>
               </div>
             </div>
           )}
 
-          {activeTab === 'VAULT' && <div className="h-[calc(100vh-320px)]">{isNeural ? <HolographicOrderBook /> : <PipBoyDarkPool />}</div>}
-
-          {activeTab === 'EFF' && (
-            <div className="h-[calc(100vh-320px)] flex items-center justify-center">
-              <div className="w-full max-w-4xl">{isNeural ? <HolographicOrderBook /> : <PipBoyGauges />}</div>
+          {activeTab === 'VAULT' && (
+            <div className="h-full">
+              <PanelErrorBoundary panelName={isNeural ? 'Holographic Order Book' : 'Dark Pool'}>
+                {isNeural ? (
+                  <Suspense fallback={panelFallback('Loading order book...')}>
+                    <HolographicOrderBook />
+                  </Suspense>
+                ) : (
+                  <PipBoyDarkPool />
+                )}
+              </PanelErrorBoundary>
             </div>
           )}
 
-          {activeTab === 'NET' && <div className="h-[calc(100vh-320px)]">{isNeural ? <NeuralNetwork /> : <PipBoyDarkPool />}</div>}
+          {activeTab === 'EFF' && (
+            <div className="h-full flex items-center justify-center">
+              <div className="w-full max-w-4xl">
+                <PanelErrorBoundary panelName={isNeural ? 'Holographic Order Book' : 'Gauges'}>
+                  {isNeural ? (
+                    <Suspense fallback={panelFallback('Loading order book...')}>
+                      <HolographicOrderBook />
+                    </Suspense>
+                  ) : (
+                    <PipBoyGauges />
+                  )}
+                </PanelErrorBoundary>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'NET' && (
+            <div className="h-full">
+              <PanelErrorBoundary panelName={isNeural ? 'Neural Network' : 'Dark Pool'}>
+                {isNeural ? (
+                  <Suspense fallback={panelFallback('Loading neural network...')}>
+                    <NeuralNetwork />
+                  </Suspense>
+                ) : (
+                  <PipBoyDarkPool />
+                )}
+              </PanelErrorBoundary>
+            </div>
+          )}
 
           {activeTab === 'SYS' && (
-            <div className="h-[calc(100vh-320px)] pipboy-box p-8" style={isNeural ? { borderColor: '#3b6699' } : undefined}>
+            <div className="h-full pipboy-box p-8" style={isNeural ? { borderColor: '#3b6699' } : undefined}>
               <div className="grid grid-cols-2 gap-4 h-full">
                 <div className="pipboy-box p-4 bg-[#000000]">
                   <div className="text-sm radioactive-text pixel-text mb-4 border-b border-[#008F11] pb-2">SYSTEM HEALTH</div>

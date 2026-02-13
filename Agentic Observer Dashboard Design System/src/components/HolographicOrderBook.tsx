@@ -63,15 +63,17 @@ export const HolographicOrderBook: React.FC = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const nextMid = Number(randomAround(midPrice, 1.3).toFixed(2));
-      setMidPrice(nextMid);
-      const nextSnap = createSnapshot(nextMid);
-      setSnapshot(nextSnap);
-      setWhalePulse(nextSnap.whaleSize >= 160);
+      setMidPrice((prevMid) => {
+        const nextMid = Number(randomAround(prevMid, 1.3).toFixed(2));
+        const nextSnap = createSnapshot(nextMid);
+        setSnapshot(nextSnap);
+        setWhalePulse(nextSnap.whaleSize >= 160);
+        return nextMid;
+      });
     }, 1400);
 
     return () => clearInterval(interval);
-  }, [midPrice]);
+  }, []);
 
   useEffect(() => {
     if (!whalePulse) return;
