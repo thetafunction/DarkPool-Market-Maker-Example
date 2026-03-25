@@ -105,47 +105,59 @@ func (p *Pusher) pushAllPairs() {
 		return
 	}
 
+	snapshots := make([]*mmv1.DepthSnapshot, 0, len(p.cfg.Pairs))
 	for _, pair := range p.cfg.Pairs {
-		if err := p.pushDepthSnapshot(pair); err != nil {
+		snapshot, err := p.buildPairSnapshot(pair)
+		if err != nil {
 			p.logger.Error("Failed to push depth snapshot",
 				"chainId", pair.ChainID,
 				"pairId", pair.PairID,
 				"error", err)
+			continue
 		}
+		snapshots = append(snapshots, snapshot)
+	}
+
+	if len(snapshots) == 0 {
+		return
+	}
+
+	if err := p.pushDepthSnapshots(snapshots); err != nil {
+		p.logger.Error("Failed to push depth snapshot batch",
+			"count", len(snapshots),
+			"error", err)
 	}
 }
 
-// pushDepthSnapshot pushes depth snapshot for a single trading pair
-func (p *Pusher) pushDepthSnapshot(pair config.PairConfig) error {
+func (p *Pusher) buildPairSnapshot(pair config.PairConfig) (*mmv1.DepthSnapshot, error) {
 	// Get depth data
 	orderBook, err := p.provider.GetDepth(pair.ChainID, pair.PairID)
 	if err != nil {
-		return fmt.Errorf("failed to get depth: %w", err)
+		return nil, fmt.Errorf("failed to get depth: %w", err)
 	}
 
 	// Build depth snapshot
 	snapshot := p.buildDepthSnapshot(orderBook, pair)
+	return snapshot, nil
+}
 
+func (p *Pusher) pushDepthSnapshots(snapshots []*mmv1.DepthSnapshot) error {
 	// Build message
 	msg := &mmv1.Message{
-		Type:      mmv1.MessageType_MESSAGE_TYPE_DEPTH_SNAPSHOT,
+		Type:      mmv1.MessageType_MESSAGE_TYPE_DEPTH_SNAPSHOT_BATCH,
 		Timestamp: time.Now().UnixMilli(),
-		Payload: &mmv1.Message_DepthSnapshot{
-			DepthSnapshot: snapshot,
+		Payload: &mmv1.Message_DepthSnapshotBatch{
+			DepthSnapshotBatch: &mmv1.DepthSnapshotBatch{
+				Snapshots: snapshots,
+			},
 		},
 	}
 
-	// Send
 	if err := p.wsClient.Send(msg); err != nil {
-		return fmt.Errorf("failed to send depth snapshot: %w", err)
+		return fmt.Errorf("failed to send depth snapshot batch: %w", err)
 	}
 
-	p.logger.Info("Depth snapshot sent",
-		"chainId", pair.ChainID,
-		"pairId", pair.PairID,
-		"asks", len(snapshot.Asks),
-		"bids", len(snapshot.Bids))
-
+	p.logger.Info("Depth snapshot batch sent", "count", len(snapshots))
 	return nil
 }
 
@@ -220,9 +232,7 @@ func (p *Pusher) handleQuoteRequest(req *mmv1.QuoteRequest) error {
 	p.logger.Info("Received quote request",
 		"quoteId", req.QuoteId,
 		"chainId", req.ChainId,
-		"tokenIn", req.TokenIn,
-		"tokenOut", req.TokenOut,
-		"amountIn", req.AmountIn)
+		"protocolVersion", req.ProtocolVersion)
 
 	// Call QuoteHandler to process
 	response, err := p.quoteHandler.HandleQuoteRequest(p.ctx, req)
@@ -277,7 +287,8 @@ func (p *Pusher) handleConnectionAck(ack *mmv1.ConnectionAck) error {
 	if ack.Success {
 		p.logger.Info("Connection successful",
 			"sessionId", ack.SessionId,
-			"mmId", ack.MmId)
+			"mmId", ack.MmId,
+			"supportedVersions", ack.SupportedVersions)
 		// Set to Ready state
 		p.wsClient.SetState(ws.StateReady)
 

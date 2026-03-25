@@ -9,9 +9,8 @@ import (
 )
 
 func TestMMQuoteTypeHash(t *testing.T) {
-	// Verify TypeHash calculation is correct
 	expected := crypto.Keccak256Hash([]byte(
-		"MMQuote(address rfq_manager,address from,address to,address inputToken,address outputToken,uint256 amountIn,uint256 amountOut,uint256 deadline,uint256 nonce,bytes32 extraDataHash)",
+		"MMQuote(bytes32 quoteId,address maker,address vault,address executor,address inputToken,address outputToken,uint256 amountIn,uint256 amountOut,uint256 deadline,uint256 nonce,uint256 confidenceExtractedValueT,uint256 confidenceExtractedValueN,uint256 confidenceExtractedValueM,uint256 confidenceExtractedValueE,bytes extraData)",
 	))
 
 	if MMQuoteTypeHash != expected {
@@ -21,235 +20,139 @@ func TestMMQuoteTypeHash(t *testing.T) {
 
 func TestEIP712Domain_DomainSeparator(t *testing.T) {
 	domain := &EIP712Domain{
-		Name:              "RFQ Domain",
-		Version:           "1",
+		Name:              RFQVaultDomainName,
+		Version:           RFQVaultDomainVersion,
 		ChainID:           big.NewInt(56),
-		VerifyingContract: common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"),
+		VerifyingContract: common.HexToAddress("0x87e46572565Efd04121FB81CeB758c47168B4487"),
 	}
 
 	separator := domain.DomainSeparator()
 	if len(separator) != 32 {
 		t.Errorf("DomainSeparator length = %d, want 32", len(separator))
 	}
-
-	// Ensure two calls return the same result
-	separator2 := domain.DomainSeparator()
-	if string(separator) != string(separator2) {
+	if string(separator) != string(domain.DomainSeparator()) {
 		t.Error("DomainSeparator should be deterministic")
 	}
 }
 
 func TestDomainManager(t *testing.T) {
 	dm := NewDomainManager()
+	vault := common.HexToAddress("0x87e46572565Efd04121FB81CeB758c47168B4487")
+	dm.AddVaultDomain(56, vault)
 
-	// Test adding domain (verifying contract)
-	dm.AddPoolDomain(56, common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"))
-
-	// Test getting domain (verifying contract)
-	domain := dm.GetPoolDomain(56)
+	domain := dm.GetVaultDomain(56)
 	if domain == nil {
-		t.Fatal("GetDomain returned nil")
+		t.Fatal("GetVaultDomain returned nil")
 	}
-	if domain.Name != DefaultDomainName {
-		t.Errorf("Domain.Name = %s, want %s", domain.Name, DefaultDomainName)
+	if domain.Name != RFQVaultDomainName {
+		t.Errorf("Domain.Name = %s, want %s", domain.Name, RFQVaultDomainName)
 	}
-	if domain.ChainID.Int64() != 56 {
-		t.Errorf("Domain.ChainID = %d, want 56", domain.ChainID.Int64())
+	if domain.VerifyingContract != vault {
+		t.Errorf("Domain.VerifyingContract = %s, want %s", domain.VerifyingContract.Hex(), vault.Hex())
 	}
-
-	// Test verifying contract domain presence
-	if !dm.HasRFQManagerDomain(56) {
-		t.Error("Domain presence for chain 56 should be true")
+	if !dm.HasVaultDomain(56) {
+		t.Error("HasVaultDomain(56) = false, want true")
 	}
-	if dm.HasRFQManagerDomain(1) {
-		t.Error("Domain presence for chain 1 should be false")
+	if dm.HasVaultDomain(1) {
+		t.Error("HasVaultDomain(1) = true, want false")
 	}
-
-	// Test verifying contract domain separator
-	separator, ok := dm.GetPoolDomainSeparator(56)
-	if !ok {
-		t.Error("Domain separator should return true for configured chain")
+	if _, ok := dm.GetVaultDomainSeparator(56); !ok {
+		t.Error("GetVaultDomainSeparator(56) should succeed")
 	}
-	if len(separator) != 32 {
-		t.Errorf("DomainSeparator length = %d, want 32", len(separator))
-	}
-
-	_, ok = dm.GetPoolDomainSeparator(1)
-	if ok {
-		t.Error("Domain separator should return false for unconfigured chain")
-	}
-
-	// Test ChainIDs
-	ids := dm.ChainIDs()
-	if len(ids) != 1 || ids[0] != 56 {
-		t.Errorf("ChainIDs = %v, want [56]", ids)
-	}
-}
-
-func TestDomainManager_AddPoolDomainWithConfig(t *testing.T) {
-	dm := NewDomainManager()
-
-	// Use custom configuration
-	dm.AddPoolDomainWithConfig(8453, "Custom Domain", "2", "0x2F46232bC664356BB38AA556Fe1aC939B2Cc7c74")
-
-	domain := dm.GetPoolDomain(8453)
-	if domain == nil {
-		t.Fatal("GetDomain returned nil")
-	}
-	if domain.Name != "Custom Domain" {
-		t.Errorf("Domain.Name = %s, want Custom Domain", domain.Name)
-	}
-	if domain.Version != "2" {
-		t.Errorf("Domain.Version = %s, want 2", domain.Version)
-	}
-
-	// Test empty values use defaults
-	dm.AddPoolDomainWithConfig(1, "", "", "0x1234567890123456789012345678901234567890")
-	domain = dm.GetPoolDomain(1)
-	if domain.Name != DefaultDomainName {
-		t.Errorf("Domain.Name = %s, want %s", domain.Name, DefaultDomainName)
-	}
-	if domain.Version != DefaultDomainVersion {
-		t.Errorf("Domain.Version = %s, want %s", domain.Version, DefaultDomainVersion)
+	if _, ok := dm.GetVaultDomainSeparator(1); ok {
+		t.Error("GetVaultDomainSeparator(1) should fail")
 	}
 }
 
 func TestNewSignerFromHex(t *testing.T) {
 	dm := NewDomainManager()
-	dm.AddPoolDomain(56, common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"))
+	dm.AddVaultDomain(56, common.HexToAddress("0x87e46572565Efd04121FB81CeB758c47168B4487"))
 
-	// Valid private key
 	validKey := "0x0000000000000000000000000000000000000000000000000000000000000001"
-	signer, err := NewSignerFromHex(validKey, dm)
+	s, err := NewSignerFromHex(validKey, dm)
 	if err != nil {
 		t.Fatalf("NewSignerFromHex failed: %v", err)
 	}
-	if signer == nil {
-		t.Fatal("Signer should not be nil")
-	}
-
-	// Verify address
-	addr := signer.GetAddress()
-	if addr == (common.Address{}) {
+	if s.GetAddress() == (common.Address{}) {
 		t.Error("GetAddress returned zero address")
 	}
 
-	// Invalid private key
-	invalidKey := "invalid"
-	_, err = NewSignerFromHex(invalidKey, dm)
-	if err == nil {
+	if _, err := NewSignerFromHex("invalid", dm); err == nil {
 		t.Error("NewSignerFromHex should fail with invalid key")
 	}
 }
 
 func TestSigner_SignMMQuote(t *testing.T) {
 	dm := NewDomainManager()
-	dm.AddPoolDomain(56, common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"))
+	dm.AddVaultDomain(56, common.HexToAddress("0x87e46572565Efd04121FB81CeB758c47168B4487"))
 
-	signer, err := NewSignerFromHex("0x0000000000000000000000000000000000000000000000000000000000000001", dm)
+	s, err := NewSignerFromHex("0x0000000000000000000000000000000000000000000000000000000000000001", dm)
 	if err != nil {
 		t.Fatalf("NewSignerFromHex failed: %v", err)
 	}
 
-	amountOut, _ := new(big.Int).SetString("600000000000000000000", 10) // 600e18
+	var quoteID [32]byte
+	copy(quoteID[:], crypto.Keccak256([]byte("quote-id"))[:32])
+	amountOut, ok := new(big.Int).SetString("600000000000000000000", 10)
+	if !ok {
+		t.Fatal("failed to parse amountOut")
+	}
 	quote := &MMQuote{
-		RFQManager:        common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"),
-		From:        common.HexToAddress("0x1234567890123456789012345678901234567890"),
-		To:          common.HexToAddress("0x1234567890123456789012345678901234567890"),
-		InputToken:  common.HexToAddress("0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"),
-		OutputToken: common.HexToAddress("0x55d398326f99059fF775485246999027B3197955"),
-		AmountIn:    big.NewInt(1000000000000000000), // 1e18
-		AmountOut:   amountOut,
-		Deadline:    big.NewInt(1735084800),
-		Nonce:       big.NewInt(1),
-		ExtraData:   []byte{},
+		QuoteId:                   quoteID,
+		Maker:                     s.GetAddress(),
+		Vault:                     common.HexToAddress("0x87e46572565Efd04121FB81CeB758c47168B4487"),
+		Executor:                  common.HexToAddress("0xc4D38F584e998055Aef2c09bBe816465e6369993"),
+		InputToken:                common.HexToAddress("0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"),
+		OutputToken:               common.HexToAddress("0x55d398326f99059fF775485246999027B3197955"),
+		AmountIn:                  big.NewInt(1_000_000_000_000_000_000),
+		AmountOut:                 amountOut,
+		Deadline:                  big.NewInt(1_735_084_800),
+		Nonce:                     big.NewInt(1),
+		ConfidenceExtractedValueT: big.NewInt(30),
+		ConfidenceExtractedValueN: big.NewInt(1_735_084_770),
+		ConfidenceExtractedValueM: big.NewInt(50),
+		ConfidenceExtractedValueE: big.NewInt(1_000_000_000_000_000_000),
+		ExtraData:                 []byte{},
 	}
 
-	sig, err := signer.SignMMQuote(56, quote)
+	sig, err := s.SignMMQuote(56, quote)
 	if err != nil {
 		t.Fatalf("SignMMQuote failed: %v", err)
 	}
-
-	// Verify signature length (65 bytes: r(32) + s(32) + v(1))
 	if len(sig) != 65 {
-		t.Errorf("Signature length = %d, want 65", len(sig))
+		t.Errorf("signature length = %d, want 65", len(sig))
+	}
+	if sig[64] != 27 && sig[64] != 28 {
+		t.Errorf("signature v = %d, want 27 or 28", sig[64])
 	}
 
-	// Verify v value is 27 or 28
-	v := sig[64]
-	if v != 27 && v != 28 {
-		t.Errorf("Signature v = %d, want 27 or 28", v)
+	sig2, err := s.SignMMQuote(56, quote)
+	if err != nil {
+		t.Fatalf("SignMMQuote second call failed: %v", err)
 	}
-
-	// Ensure signature is deterministic
-	sig2, _ := signer.SignMMQuote(56, quote)
 	if string(sig) != string(sig2) {
-		t.Error("Signature should be deterministic")
+		t.Error("signature should be deterministic")
 	}
 }
 
 func TestSigner_SignMMQuote_ChainNotConfigured(t *testing.T) {
 	dm := NewDomainManager()
-	// Don't add any domain
-
-	signer, _ := NewSignerFromHex("0x0000000000000000000000000000000000000000000000000000000000000001", dm)
-
-	amountOut2, _ := new(big.Int).SetString("600000000000000000000", 10) // 600e18
-	quote := &MMQuote{
-		RFQManager:        common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"),
-		From:        common.HexToAddress("0x1234567890123456789012345678901234567890"),
-		To:          common.HexToAddress("0x1234567890123456789012345678901234567890"),
-		InputToken:  common.HexToAddress("0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c"),
-		OutputToken: common.HexToAddress("0x55d398326f99059fF775485246999027B3197955"),
-		AmountIn:    big.NewInt(1000000000000000000),
-		AmountOut:   amountOut2,
-		Deadline:    big.NewInt(1735084800),
-		Nonce:       big.NewInt(1),
-		ExtraData:   []byte{},
+	s, err := NewSignerFromHex("0x0000000000000000000000000000000000000000000000000000000000000001", dm)
+	if err != nil {
+		t.Fatalf("NewSignerFromHex failed: %v", err)
 	}
 
-	_, err := signer.SignMMQuote(56, quote)
-	if err == nil {
+	if _, err := s.SignMMQuote(56, &MMQuote{}); err == nil {
 		t.Error("SignMMQuote should fail when chain is not configured")
 	}
 }
 
 func TestHashExtraData(t *testing.T) {
-	extraData := []byte{0x01, 0x02, 0x03}
-	hash := HashExtraData(extraData)
-
-	// Verify hash is 32 bytes
+	hash := HashExtraData([]byte{0x01, 0x02, 0x03})
 	if len(hash) != 32 {
 		t.Errorf("HashExtraData length = %d, want 32", len(hash))
 	}
-
-	// Ensure it's deterministic
-	hash2 := HashExtraData(extraData)
-	if hash != hash2 {
+	if hash != HashExtraData([]byte{0x01, 0x02, 0x03}) {
 		t.Error("HashExtraData should be deterministic")
-	}
-}
-
-func TestNewSignerFromConfig(t *testing.T) {
-	dm := NewDomainManager()
-	dm.AddPoolDomain(56, common.HexToAddress("0x28D3a265f6d40867986004029ee91F4C9532fCC5"))
-
-	// Test direct private key configuration
-	cfg := &SignerConfig{
-		PrivateKey: "0x0000000000000000000000000000000000000000000000000000000000000001",
-	}
-	signer, err := NewSignerFromConfig(cfg, dm)
-	if err != nil {
-		t.Fatalf("NewSignerFromConfig failed: %v", err)
-	}
-	if signer == nil {
-		t.Fatal("Signer should not be nil")
-	}
-
-	// Test empty configuration
-	emptyCfg := &SignerConfig{}
-	_, err = NewSignerFromConfig(emptyCfg, dm)
-	if err == nil {
-		t.Error("NewSignerFromConfig should fail with empty config")
 	}
 }

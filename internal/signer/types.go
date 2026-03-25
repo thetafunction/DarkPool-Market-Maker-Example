@@ -7,37 +7,38 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-// MMQuote represents the Quote structure used for MM signing in the contract
-// Corresponds to contract MMQUOTE_SIGNATURE_HASH
-// Important: From and To come from SwapQuote.info, they are user addresses (msg.sender), not MM signer address
+// MMQuote matches rfq_contracts_v2 RFQLib.MMQuote, excluding mmSignature.
 type MMQuote struct {
-	RFQManager        common.Address // DarkPool RFQ Manager address (EIP-712 Domain VerifyingContract)
-	From        common.Address // Source address (SwapQuote.info.from, usually user wallet address)
-	To          common.Address // Target address (SwapQuote.info.to, usually same as From)
-	InputToken  common.Address // Input token address
-	OutputToken common.Address // Output token address
-	AmountIn    *big.Int       // Input amount (native decimals)
-	AmountOut   *big.Int       // Output amount (minimum guaranteed output, native decimals)
-	Deadline    *big.Int       // Expiration timestamp (Unix seconds)
-	Nonce       *big.Int       // Anti-replay nonce
-	ExtraData   []byte         // Optional opaque bytes (used to calculate extraDataHash)
+	QuoteId                   [32]byte
+	Maker                     common.Address
+	Vault                     common.Address
+	Executor                  common.Address
+	InputToken                common.Address
+	OutputToken               common.Address
+	AmountIn                  *big.Int
+	AmountOut                 *big.Int
+	Deadline                  *big.Int
+	Nonce                     *big.Int
+	ConfidenceExtractedValueT *big.Int
+	ConfidenceExtractedValueN *big.Int
+	ConfidenceExtractedValueM *big.Int
+	ConfidenceExtractedValueE *big.Int
+	ExtraData                 []byte
 }
 
-// MMQuoteTypeHash is the keccak256 hash of MMQuote type
-// Corresponds to contract MMQUOTE_SIGNATURE_HASH
+// MMQuoteTypeHash must stay byte-for-byte aligned with RFQLib.MM_QUOTE_TYPEHASH.
 var MMQuoteTypeHash = crypto.Keccak256Hash([]byte(
-	"MMQuote(address rfq_manager,address from,address to,address inputToken,address outputToken," +
-		"uint256 amountIn,uint256 amountOut,uint256 deadline,uint256 nonce,bytes32 extraDataHash)"))
+	"MMQuote(bytes32 quoteId,address maker,address vault,address executor,address inputToken,address outputToken," +
+		"uint256 amountIn,uint256 amountOut,uint256 deadline,uint256 nonce," +
+		"uint256 confidenceExtractedValueT,uint256 confidenceExtractedValueN," +
+		"uint256 confidenceExtractedValueM,uint256 confidenceExtractedValueE,bytes extraData)"))
 
-// WrappedNativeTokens maps chain IDs to their Wrapped Native Token addresses
-// chainId -> wrapped token address
 var WrappedNativeTokens = map[uint64]common.Address{
-	56:   common.HexToAddress("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c"), // BSC: WBNB
-	8453: common.HexToAddress("0x4200000000000000000000000000000000000006"), // Base: WETH
-	1:    common.HexToAddress("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"), // Ethereum: WETH
+	56:   common.HexToAddress("0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c"),
+	8453: common.HexToAddress("0x4200000000000000000000000000000000000006"),
+	1:    common.HexToAddress("0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"),
 }
 
-// GetWrappedToken gets the Wrapped Native Token address for a specified chain
 func GetWrappedToken(chainID uint64) (common.Address, bool) {
 	addr, ok := WrappedNativeTokens[chainID]
 	return addr, ok

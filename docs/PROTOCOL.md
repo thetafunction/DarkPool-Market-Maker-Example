@@ -1,76 +1,49 @@
-# WebSocket Protocol Details
+# WebSocket Protocol
 
-This document describes the WebSocket communication protocol between Market Maker and the DarkPool system.
+This example follows the current MMHub WebSocket protocol used by the RFQ stack. All messages are protobuf-encoded and wrapped in a top-level `Message`.
 
-## Connection Establishment
+## Authentication
 
-### Endpoint
+Connect to the MMHub WebSocket endpoint with:
 
-```
-ws://<host>:<port>/ws
-```
-
-### Authentication
-
-Authentication uses JWT Token, carried in the HTTP Header:
-
-```
-Authorization: Bearer <jwt_token>
+```text
+Authorization: Bearer <market_maker_api_key>
 ```
 
-The token is obtained from the DarkPool admin console. Ensure that:
-- The `mm_id` in the token matches the signer address
-- The token has not expired
+Use the `market_maker` API key issued for the Market Maker identity. Do not use a `business` API key here.
 
-### Connection Flow
+## Connection Flow
 
-```
-Client                                Server
-  |                                     |
-  |  WebSocket Connect (JWT Header)     |
-  |------------------------------------>|
-  |                                     |
-  |       CONNECTION_ACK (success)      |
-  |<------------------------------------|
-  |                                     |
-  |     DEPTH_SNAPSHOT (periodic)       |
-  |------------------------------------>|
-  |                                     |
-  |       QUOTE_REQUEST                 |
-  |<------------------------------------|
-  |                                     |
-  |       QUOTE_RESPONSE                |
-  |------------------------------------>|
-  |                                     |
-```
-
-## Message Format
-
-All messages are serialized using Protobuf binary format.
-
-### Message Types
-
-```protobuf
-enum MessageType {
-  MESSAGE_TYPE_UNSPECIFIED = 0;
-  MESSAGE_TYPE_REGISTER = 1;
-  MESSAGE_TYPE_REGISTER_ACK = 2;
-  MESSAGE_TYPE_DEPTH_SNAPSHOT = 3;
-  MESSAGE_TYPE_QUOTE_REQUEST = 4;
-  MESSAGE_TYPE_QUOTE_RESPONSE = 5;
-  MESSAGE_TYPE_QUOTE_REJECT = 6;
-  MESSAGE_TYPE_HEARTBEAT = 7;
-  MESSAGE_TYPE_ERROR = 8;
-  MESSAGE_TYPE_CONNECTION_ACK = 9;
-}
+```text
+MM Client                               MMHub
+  |                                       |
+  | WebSocket connect + Bearer token      |
+  |-------------------------------------->|
+  |                                       |
+  | CONNECTION_ACK                        |
+  |<--------------------------------------|
+  |                                       |
+  | DEPTH_SNAPSHOT_BATCH (periodic)       |
+  |-------------------------------------->|
+  |                                       |
+  | QUOTE_REQUEST                         |
+  |<--------------------------------------|
+  |                                       |
+  | QUOTE_RESPONSE or QUOTE_REJECT        |
+  |-------------------------------------->|
+  |                                       |
+  | HEARTBEAT ping/pong                   |
+  |<------------------------------------->|
 ```
 
-### Message Wrapper
+After `CONNECTION_ACK.success=true`, the client can start publishing depth and answering quote requests.
+
+## Wrapper
 
 ```protobuf
 message Message {
   MessageType type = 1;
-  int64 timestamp = 2;  // Unix millisecond timestamp
+  int64 timestamp = 2;
 
   oneof payload {
     DepthSnapshot depth_snapshot = 3;
@@ -80,41 +53,47 @@ message Message {
     Heartbeat heartbeat = 7;
     Error error = 8;
     ConnectionAck connection_ack = 9;
+    DepthSnapshotBatch depth_snapshot_batch = 10;
   }
 }
 ```
 
-## Message Type Details
+Relevant message types in this example:
 
-### CONNECTION_ACK
+- `MESSAGE_TYPE_CONNECTION_ACK`
+- `MESSAGE_TYPE_DEPTH_SNAPSHOT_BATCH`
+- `MESSAGE_TYPE_QUOTE_REQUEST`
+- `MESSAGE_TYPE_QUOTE_RESPONSE`
+- `MESSAGE_TYPE_QUOTE_REJECT`
+- `MESSAGE_TYPE_HEARTBEAT`
+- `MESSAGE_TYPE_ERROR`
 
-Sent by the server after successful token verification.
+## CONNECTION_ACK
 
 ```protobuf
 message ConnectionAck {
   bool success = 1;
   string session_id = 2;
-  int64 server_time = 3;    // Unix milliseconds
+  int64 server_time = 3;
   string mm_id = 4;
   ConnectionConfig config = 5;
   string error_message = 6;
-}
-
-message ConnectionConfig {
-  uint32 depth_push_interval_ms = 1;
-  uint32 quote_timeout_ms = 2;
-  uint32 heartbeat_interval_ms = 3;
+  repeated string supported_versions = 7;
 }
 ```
 
-After receiving `success=true`, the client enters Ready state and can start pushing depth data.
-`config` provides server-suggested intervals; the client may keep using its local configuration.
+- `supported_versions` declares the RFQ protocol versions the server accepts.
+- This example currently responds only to `v1`.
 
-### DEPTH_SNAPSHOT
+## Depth Publishing
 
-Depth snapshot actively pushed by the Market Maker.
+The example publishes all configured pairs in one batch:
 
 ```protobuf
+message DepthSnapshotBatch {
+  repeated DepthSnapshot snapshots = 1;
+}
+
 message DepthSnapshot {
   uint64 chain_id = 1;
   string pair_id = 2;
@@ -124,49 +103,54 @@ message DepthSnapshot {
   repeated PriceLevel bids = 6;
   repeated PriceLevel asks = 7;
 }
-
-message PriceLevel {
-  string price = 1;   // wei/wei format (tokenBWei / tokenAWei)
-  string amount = 2;  // tokenA native decimals
-}
 ```
 
-**Notes**:
-- `price` uses wei/wei format (tokenBWei / tokenAWei, no decimals adjustment)
-  - Example: tokenA=WETH(18d), tokenB=USDC(6d), 1 WETH=3400 USDC, price = 3400×10^6 / 10^18 ≈ 0.0000000034
-- `amount` uses tokenA (baseToken) native decimals
-  - Example: 3.28 WETH is represented as "3280000000000000000"
-- `asks` sorted by price in ascending order
-- `bids` sorted by price in descending order
+`PriceLevel.price` is the `token_b_wei / token_a_wei` ratio. `PriceLevel.amount` uses `token_a` native decimals.
 
-### QUOTE_REQUEST
+## Quote Request Envelope
 
-Quote request sent by the server.
+`QuoteRequest` is a stable envelope. The body is versioned and encoded in `quote_request_data`.
 
 ```protobuf
 message QuoteRequest {
   string quote_id = 1;
   uint64 chain_id = 2;
   string mm_id = 3;
-  string token_in = 4;
-  string token_out = 5;
-  string amount_in = 6;  // native decimals
-  string from = 7;
-  string recipient = 8;
-  string nonce = 9;
-  int64 deadline = 10;
+  string protocol_version = 4;
+  bytes quote_request_data = 5;
 }
 ```
 
-**Notes**:
-- `amount_in` uses the token's native decimals (e.g., USDC is 6 decimals, WETH is 18 decimals)
-- `token_in` as `0x0000...0000` represents the native token
-- If `token_in`/`token_out` is zero address, the client replaces it with the chain's wrapped token when building the response/signature
-- `deadline` is a Unix second timestamp
+Constraints used by this example:
 
-### QUOTE_RESPONSE
+- `quote_id` must be a 32-byte hex string
+- `protocol_version` must be `v1`
+- `quote_request_data` must decode as `QuoteRequestV1`
 
-Successful quote response.
+## QuoteRequestV1
+
+```protobuf
+message QuoteRequestV1 {
+  string token_in = 1;
+  string token_out = 2;
+  string amount_in = 3;
+  string executor = 4;
+  int64 deadline = 5;
+  string nonce = 6;
+  string from = 7;
+  string recipient = 8;
+  ConfidenceExtractedValue confidence_extracted_value = 9;
+}
+```
+
+Notes:
+
+- `amount_in`, `nonce`, and the confidence-extracted-value fields are decimal strings.
+- `deadline` is a Unix second timestamp.
+- `token_in` or `token_out` may be the zero address to represent the native token.
+- This example uses wrapped-native addresses only for local pair lookup. The outgoing quote and signature keep the original request token addresses unchanged.
+
+## Quote Response Envelope
 
 ```protobuf
 message QuoteResponse {
@@ -174,34 +158,41 @@ message QuoteResponse {
   uint64 chain_id = 2;
   string mm_id = 3;
   QuoteStatus status = 4;
-  SignedOrder order = 5;
-}
-
-message SignedOrder {
-  string signer = 1;
-  string rfq_manager = 2;       // verifying contract address
-  string nonce = 3;
-  string amount_in = 4;   // native decimals
-  string amount_out = 5;  // native decimals (matches signature)
-  int64 deadline = 6;
-  bytes extra_data = 7;   // optional opaque bytes (demo uses empty bytes)
-  bytes signature = 8;    // EIP-712 signature
+  string protocol_version = 5;
+  bytes mm_quote_data = 6;
 }
 ```
 
-### QUOTE_REJECT
+When `status=QUOTE_STATUS_SUCCESS`, `mm_quote_data` contains `MMQuoteV1`.
 
-Quote rejection.
+## MMQuoteV1
 
 ```protobuf
-message QuoteReject {
-  string quote_id = 1;
-  uint64 chain_id = 2;
-  string mm_id = 3;
-  RejectReason reason = 4;
-  string message = 5;
+message MMQuoteV1 {
+  string maker = 1;
+  string vault = 2;
+  string executor = 3;
+  string token_in = 4;
+  string token_out = 5;
+  string amount_in = 6;
+  string amount_out = 7;
+  string deadline = 8;
+  string nonce = 9;
+  ConfidenceExtractedValue confidence_extracted_value = 10;
+  bytes extra_data = 11;
+  bytes mm_signature = 12;
+  string quote_id = 13;
 }
+```
 
+- `maker` is the signer address used by the MM.
+- `vault` is the RFQ vault configured for that chain.
+- `amount_out` is the quoted minimum output amount.
+- `mm_signature` is the EIP-712 signature of the on-chain `MMQuote`.
+
+## Quote Reject
+
+```protobuf
 enum RejectReason {
   REJECT_REASON_UNSPECIFIED = 0;
   REJECT_REASON_INSUFFICIENT_LIQUIDITY = 1;
@@ -211,12 +202,19 @@ enum RejectReason {
   REJECT_REASON_AMOUNT_TOO_LARGE = 5;
   REJECT_REASON_RATE_LIMITED = 6;
   REJECT_REASON_INTERNAL_ERROR = 7;
+  REJECT_REASON_VERSION_NOT_SUPPORTED = 8;
 }
 ```
 
-### HEARTBEAT
+This example rejects requests when:
 
-Heartbeat message.
+- the protocol version is unsupported
+- the pair is not configured locally
+- the request cannot be parsed or validated
+- the quote strategy returns no liquidity
+- signing fails
+
+## Heartbeat
 
 ```protobuf
 message Heartbeat {
@@ -225,39 +223,7 @@ message Heartbeat {
 }
 ```
 
-Client behavior:
-- Send `ping=true` every 30 seconds
-- Reply with `pong=true` when receiving `ping=true` from server
-
-### ERROR
-
-Error message.
-
-```protobuf
-message Error {
-  ErrorCode code = 1;
-  string message = 2;
-  string related_quote_id = 3;
-}
-
-enum ErrorCode {
-  ERROR_CODE_UNSPECIFIED = 0;
-  ERROR_CODE_INVALID_MESSAGE = 1;
-  ERROR_CODE_INVALID_SIGNATURE = 2;
-  ERROR_CODE_TIMEOUT = 3;
-  ERROR_CODE_INTERNAL = 4;
-  ERROR_CODE_NOT_REGISTERED = 5;
-  ERROR_CODE_DUPLICATE_REGISTER = 6;
-  ERROR_CODE_UNAUTHORIZED = 7;
-  ERROR_CODE_PAIR_NOT_WHITELISTED = 8;
-}
-```
-
-## Heartbeat Mechanism
-
-- Heartbeat interval: 30 seconds
-- Read timeout: 90 seconds
-- Reconnection triggered if no message received within timeout
+The client should reply with `pong=true` when the server sends `ping=true`.
 
 ## Reconnection Mechanism
 

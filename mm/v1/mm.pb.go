@@ -21,47 +21,49 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// MessageType message type enumeration
 type MessageType int32
 
 const (
-	MessageType_MESSAGE_TYPE_UNSPECIFIED    MessageType = 0
-	MessageType_MESSAGE_TYPE_REGISTER       MessageType = 1
-	MessageType_MESSAGE_TYPE_REGISTER_ACK   MessageType = 2
-	MessageType_MESSAGE_TYPE_DEPTH_SNAPSHOT MessageType = 3
-	MessageType_MESSAGE_TYPE_QUOTE_REQUEST  MessageType = 4
-	MessageType_MESSAGE_TYPE_QUOTE_RESPONSE MessageType = 5
-	MessageType_MESSAGE_TYPE_QUOTE_REJECT   MessageType = 6
-	MessageType_MESSAGE_TYPE_HEARTBEAT      MessageType = 7
-	MessageType_MESSAGE_TYPE_ERROR          MessageType = 8
-	MessageType_MESSAGE_TYPE_CONNECTION_ACK MessageType = 9 // Connection confirmation after token authentication
+	MessageType_MESSAGE_TYPE_UNSPECIFIED          MessageType = 0
+	MessageType_MESSAGE_TYPE_REGISTER             MessageType = 1
+	MessageType_MESSAGE_TYPE_REGISTER_ACK         MessageType = 2
+	MessageType_MESSAGE_TYPE_DEPTH_SNAPSHOT       MessageType = 3
+	MessageType_MESSAGE_TYPE_QUOTE_REQUEST        MessageType = 4
+	MessageType_MESSAGE_TYPE_QUOTE_RESPONSE       MessageType = 5
+	MessageType_MESSAGE_TYPE_QUOTE_REJECT         MessageType = 6
+	MessageType_MESSAGE_TYPE_HEARTBEAT            MessageType = 7
+	MessageType_MESSAGE_TYPE_ERROR                MessageType = 8
+	MessageType_MESSAGE_TYPE_CONNECTION_ACK       MessageType = 9
+	MessageType_MESSAGE_TYPE_DEPTH_SNAPSHOT_BATCH MessageType = 10
 )
 
 // Enum value maps for MessageType.
 var (
 	MessageType_name = map[int32]string{
-		0: "MESSAGE_TYPE_UNSPECIFIED",
-		1: "MESSAGE_TYPE_REGISTER",
-		2: "MESSAGE_TYPE_REGISTER_ACK",
-		3: "MESSAGE_TYPE_DEPTH_SNAPSHOT",
-		4: "MESSAGE_TYPE_QUOTE_REQUEST",
-		5: "MESSAGE_TYPE_QUOTE_RESPONSE",
-		6: "MESSAGE_TYPE_QUOTE_REJECT",
-		7: "MESSAGE_TYPE_HEARTBEAT",
-		8: "MESSAGE_TYPE_ERROR",
-		9: "MESSAGE_TYPE_CONNECTION_ACK",
+		0:  "MESSAGE_TYPE_UNSPECIFIED",
+		1:  "MESSAGE_TYPE_REGISTER",
+		2:  "MESSAGE_TYPE_REGISTER_ACK",
+		3:  "MESSAGE_TYPE_DEPTH_SNAPSHOT",
+		4:  "MESSAGE_TYPE_QUOTE_REQUEST",
+		5:  "MESSAGE_TYPE_QUOTE_RESPONSE",
+		6:  "MESSAGE_TYPE_QUOTE_REJECT",
+		7:  "MESSAGE_TYPE_HEARTBEAT",
+		8:  "MESSAGE_TYPE_ERROR",
+		9:  "MESSAGE_TYPE_CONNECTION_ACK",
+		10: "MESSAGE_TYPE_DEPTH_SNAPSHOT_BATCH",
 	}
 	MessageType_value = map[string]int32{
-		"MESSAGE_TYPE_UNSPECIFIED":    0,
-		"MESSAGE_TYPE_REGISTER":       1,
-		"MESSAGE_TYPE_REGISTER_ACK":   2,
-		"MESSAGE_TYPE_DEPTH_SNAPSHOT": 3,
-		"MESSAGE_TYPE_QUOTE_REQUEST":  4,
-		"MESSAGE_TYPE_QUOTE_RESPONSE": 5,
-		"MESSAGE_TYPE_QUOTE_REJECT":   6,
-		"MESSAGE_TYPE_HEARTBEAT":      7,
-		"MESSAGE_TYPE_ERROR":          8,
-		"MESSAGE_TYPE_CONNECTION_ACK": 9,
+		"MESSAGE_TYPE_UNSPECIFIED":          0,
+		"MESSAGE_TYPE_REGISTER":             1,
+		"MESSAGE_TYPE_REGISTER_ACK":         2,
+		"MESSAGE_TYPE_DEPTH_SNAPSHOT":       3,
+		"MESSAGE_TYPE_QUOTE_REQUEST":        4,
+		"MESSAGE_TYPE_QUOTE_RESPONSE":       5,
+		"MESSAGE_TYPE_QUOTE_REJECT":         6,
+		"MESSAGE_TYPE_HEARTBEAT":            7,
+		"MESSAGE_TYPE_ERROR":                8,
+		"MESSAGE_TYPE_CONNECTION_ACK":       9,
+		"MESSAGE_TYPE_DEPTH_SNAPSHOT_BATCH": 10,
 	}
 )
 
@@ -92,7 +94,6 @@ func (MessageType) EnumDescriptor() ([]byte, []int) {
 	return file_mm_v1_mm_proto_rawDescGZIP(), []int{0}
 }
 
-// QuoteStatus quote status
 type QuoteStatus int32
 
 const (
@@ -142,7 +143,6 @@ func (QuoteStatus) EnumDescriptor() ([]byte, []int) {
 	return file_mm_v1_mm_proto_rawDescGZIP(), []int{1}
 }
 
-// RejectReason rejection reason
 type RejectReason int32
 
 const (
@@ -154,6 +154,7 @@ const (
 	RejectReason_REJECT_REASON_AMOUNT_TOO_LARGE       RejectReason = 5
 	RejectReason_REJECT_REASON_RATE_LIMITED           RejectReason = 6
 	RejectReason_REJECT_REASON_INTERNAL_ERROR         RejectReason = 7
+	RejectReason_REJECT_REASON_VERSION_NOT_SUPPORTED  RejectReason = 8
 )
 
 // Enum value maps for RejectReason.
@@ -167,6 +168,7 @@ var (
 		5: "REJECT_REASON_AMOUNT_TOO_LARGE",
 		6: "REJECT_REASON_RATE_LIMITED",
 		7: "REJECT_REASON_INTERNAL_ERROR",
+		8: "REJECT_REASON_VERSION_NOT_SUPPORTED",
 	}
 	RejectReason_value = map[string]int32{
 		"REJECT_REASON_UNSPECIFIED":            0,
@@ -177,6 +179,7 @@ var (
 		"REJECT_REASON_AMOUNT_TOO_LARGE":       5,
 		"REJECT_REASON_RATE_LIMITED":           6,
 		"REJECT_REASON_INTERNAL_ERROR":         7,
+		"REJECT_REASON_VERSION_NOT_SUPPORTED":  8,
 	}
 )
 
@@ -207,7 +210,6 @@ func (RejectReason) EnumDescriptor() ([]byte, []int) {
 	return file_mm_v1_mm_proto_rawDescGZIP(), []int{2}
 }
 
-// ErrorCode error code
 type ErrorCode int32
 
 const (
@@ -218,9 +220,9 @@ const (
 	ErrorCode_ERROR_CODE_INTERNAL             ErrorCode = 4
 	ErrorCode_ERROR_CODE_NOT_REGISTERED       ErrorCode = 5
 	ErrorCode_ERROR_CODE_DUPLICATE_REGISTER   ErrorCode = 6
-	ErrorCode_ERROR_CODE_UNAUTHORIZED         ErrorCode = 7 // Token verification failed
-	ErrorCode_ERROR_CODE_PAIR_NOT_WHITELISTED ErrorCode = 8 // Pair not whitelisted
-	ErrorCode_ERROR_CODE_RATE_LIMITED         ErrorCode = 9 // Rate limited (exceeded rate limit)
+	ErrorCode_ERROR_CODE_UNAUTHORIZED         ErrorCode = 7
+	ErrorCode_ERROR_CODE_PAIR_NOT_WHITELISTED ErrorCode = 8
+	ErrorCode_ERROR_CODE_RATE_LIMITED         ErrorCode = 9
 )
 
 // Enum value maps for ErrorCode.
@@ -278,11 +280,11 @@ func (ErrorCode) EnumDescriptor() ([]byte, []int) {
 	return file_mm_v1_mm_proto_rawDescGZIP(), []int{3}
 }
 
-// Message is the unified wrapper for all WebSocket messages
+// Message is the unified wrapper for all WebSocket messages.
 type Message struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
 	Type      MessageType            `protobuf:"varint,1,opt,name=type,proto3,enum=mm.v1.MessageType" json:"type,omitempty"`
-	Timestamp int64                  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"` // Unix milliseconds timestamp
+	Timestamp int64                  `protobuf:"varint,2,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	// Types that are valid to be assigned to Payload:
 	//
 	//	*Message_DepthSnapshot
@@ -292,6 +294,7 @@ type Message struct {
 	//	*Message_Heartbeat
 	//	*Message_Error
 	//	*Message_ConnectionAck
+	//	*Message_DepthSnapshotBatch
 	Payload       isMessage_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -411,6 +414,15 @@ func (x *Message) GetConnectionAck() *ConnectionAck {
 	return nil
 }
 
+func (x *Message) GetDepthSnapshotBatch() *DepthSnapshotBatch {
+	if x != nil {
+		if x, ok := x.Payload.(*Message_DepthSnapshotBatch); ok {
+			return x.DepthSnapshotBatch
+		}
+	}
+	return nil
+}
+
 type isMessage_Payload interface {
 	isMessage_Payload()
 }
@@ -443,6 +455,10 @@ type Message_ConnectionAck struct {
 	ConnectionAck *ConnectionAck `protobuf:"bytes,9,opt,name=connection_ack,json=connectionAck,proto3,oneof"`
 }
 
+type Message_DepthSnapshotBatch struct {
+	DepthSnapshotBatch *DepthSnapshotBatch `protobuf:"bytes,10,opt,name=depth_snapshot_batch,json=depthSnapshotBatch,proto3,oneof"`
+}
+
 func (*Message_DepthSnapshot) isMessage_Payload() {}
 
 func (*Message_QuoteRequest) isMessage_Payload() {}
@@ -457,17 +473,19 @@ func (*Message_Error) isMessage_Payload() {}
 
 func (*Message_ConnectionAck) isMessage_Payload() {}
 
-// ConnectionAck connection confirmation (sent after token authentication success)
+func (*Message_DepthSnapshotBatch) isMessage_Payload() {}
+
 type ConnectionAck struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Success       bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
-	SessionId     string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	ServerTime    int64                  `protobuf:"varint,3,opt,name=server_time,json=serverTime,proto3" json:"server_time,omitempty"` // Server time (Unix milliseconds)
-	MmId          string                 `protobuf:"bytes,4,opt,name=mm_id,json=mmId,proto3" json:"mm_id,omitempty"`                    // Confirmed MM ID
-	Config        *ConnectionConfig      `protobuf:"bytes,5,opt,name=config,proto3" json:"config,omitempty"`
-	ErrorMessage  string                 `protobuf:"bytes,6,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"` // Error message on failure
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Success           bool                   `protobuf:"varint,1,opt,name=success,proto3" json:"success,omitempty"`
+	SessionId         string                 `protobuf:"bytes,2,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	ServerTime        int64                  `protobuf:"varint,3,opt,name=server_time,json=serverTime,proto3" json:"server_time,omitempty"`
+	MmId              string                 `protobuf:"bytes,4,opt,name=mm_id,json=mmId,proto3" json:"mm_id,omitempty"`
+	Config            *ConnectionConfig      `protobuf:"bytes,5,opt,name=config,proto3" json:"config,omitempty"`
+	ErrorMessage      string                 `protobuf:"bytes,6,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	SupportedVersions []string               `protobuf:"bytes,7,rep,name=supported_versions,json=supportedVersions,proto3" json:"supported_versions,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *ConnectionAck) Reset() {
@@ -542,12 +560,18 @@ func (x *ConnectionAck) GetErrorMessage() string {
 	return ""
 }
 
-// ConnectionConfig connection configuration (sent by server)
+func (x *ConnectionAck) GetSupportedVersions() []string {
+	if x != nil {
+		return x.SupportedVersions
+	}
+	return nil
+}
+
 type ConnectionConfig struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
-	DepthPushIntervalMs uint32                 `protobuf:"varint,1,opt,name=depth_push_interval_ms,json=depthPushIntervalMs,proto3" json:"depth_push_interval_ms,omitempty"` // Suggested push interval (milliseconds)
-	QuoteTimeoutMs      uint32                 `protobuf:"varint,2,opt,name=quote_timeout_ms,json=quoteTimeoutMs,proto3" json:"quote_timeout_ms,omitempty"`                  // Quote timeout (milliseconds)
-	HeartbeatIntervalMs uint32                 `protobuf:"varint,3,opt,name=heartbeat_interval_ms,json=heartbeatIntervalMs,proto3" json:"heartbeat_interval_ms,omitempty"`   // Heartbeat interval (milliseconds)
+	DepthPushIntervalMs uint32                 `protobuf:"varint,1,opt,name=depth_push_interval_ms,json=depthPushIntervalMs,proto3" json:"depth_push_interval_ms,omitempty"`
+	QuoteTimeoutMs      uint32                 `protobuf:"varint,2,opt,name=quote_timeout_ms,json=quoteTimeoutMs,proto3" json:"quote_timeout_ms,omitempty"`
+	HeartbeatIntervalMs uint32                 `protobuf:"varint,3,opt,name=heartbeat_interval_ms,json=heartbeatIntervalMs,proto3" json:"heartbeat_interval_ms,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -603,7 +627,6 @@ func (x *ConnectionConfig) GetHeartbeatIntervalMs() uint32 {
 	return 0
 }
 
-// DepthSnapshot depth snapshot (pushed independently for each pool)
 type DepthSnapshot struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ChainId       uint64                 `protobuf:"varint,1,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
@@ -611,8 +634,8 @@ type DepthSnapshot struct {
 	MmId          string                 `protobuf:"bytes,3,opt,name=mm_id,json=mmId,proto3" json:"mm_id,omitempty"`
 	TokenA        string                 `protobuf:"bytes,4,opt,name=token_a,json=tokenA,proto3" json:"token_a,omitempty"`
 	TokenB        string                 `protobuf:"bytes,5,opt,name=token_b,json=tokenB,proto3" json:"token_b,omitempty"`
-	Bids          []*PriceLevel          `protobuf:"bytes,6,rep,name=bids,proto3" json:"bids,omitempty"` // Bids (price descending)
-	Asks          []*PriceLevel          `protobuf:"bytes,7,rep,name=asks,proto3" json:"asks,omitempty"` // Asks (price ascending)
+	Bids          []*PriceLevel          `protobuf:"bytes,6,rep,name=bids,proto3" json:"bids,omitempty"`
+	Asks          []*PriceLevel          `protobuf:"bytes,7,rep,name=asks,proto3" json:"asks,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -696,11 +719,10 @@ func (x *DepthSnapshot) GetAsks() []*PriceLevel {
 	return nil
 }
 
-// PriceLevel price level
 type PriceLevel struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Price         string                 `protobuf:"bytes,1,opt,name=price,proto3" json:"price,omitempty"`   // Price (tokenB/tokenA)
-	Amount        string                 `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"` // Amount (tokenA)
+	Price         string                 `protobuf:"bytes,1,opt,name=price,proto3" json:"price,omitempty"`
+	Amount        string                 `protobuf:"bytes,2,opt,name=amount,proto3" json:"amount,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -749,26 +771,66 @@ func (x *PriceLevel) GetAmount() string {
 	return ""
 }
 
-// QuoteRequest quote request
-type QuoteRequest struct {
+type DepthSnapshotBatch struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	QuoteId       string                 `protobuf:"bytes,1,opt,name=quote_id,json=quoteId,proto3" json:"quote_id,omitempty"` // Quote request unique ID (UUID)
-	ChainId       uint64                 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
-	MmId          string                 `protobuf:"bytes,3,opt,name=mm_id,json=mmId,proto3" json:"mm_id,omitempty"`
-	TokenIn       string                 `protobuf:"bytes,4,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty"`    // Input token address
-	TokenOut      string                 `protobuf:"bytes,5,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty"` // Output token address
-	AmountIn      string                 `protobuf:"bytes,6,opt,name=amount_in,json=amountIn,proto3" json:"amount_in,omitempty"` // Input amount (uint256 string)
-	Recipient     string                 `protobuf:"bytes,7,opt,name=recipient,proto3" json:"recipient,omitempty"`               // User recipient address
-	Nonce         string                 `protobuf:"bytes,8,opt,name=nonce,proto3" json:"nonce,omitempty"`                       // Anti-replay nonce
-	Deadline      int64                  `protobuf:"varint,9,opt,name=deadline,proto3" json:"deadline,omitempty"`                // Expiration timestamp (Unix seconds)
-	From          string                 `protobuf:"bytes,10,opt,name=from,proto3" json:"from,omitempty"`                        // Sender address
+	Snapshots     []*DepthSnapshot       `protobuf:"bytes,1,rep,name=snapshots,proto3" json:"snapshots,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
+func (x *DepthSnapshotBatch) Reset() {
+	*x = DepthSnapshotBatch{}
+	mi := &file_mm_v1_mm_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepthSnapshotBatch) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepthSnapshotBatch) ProtoMessage() {}
+
+func (x *DepthSnapshotBatch) ProtoReflect() protoreflect.Message {
+	mi := &file_mm_v1_mm_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepthSnapshotBatch.ProtoReflect.Descriptor instead.
+func (*DepthSnapshotBatch) Descriptor() ([]byte, []int) {
+	return file_mm_v1_mm_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *DepthSnapshotBatch) GetSnapshots() []*DepthSnapshot {
+	if x != nil {
+		return x.Snapshots
+	}
+	return nil
+}
+
+// QuoteRequest is a stable envelope. The versioned body is serialized into
+// quote_request_data and decoded based on protocol_version.
+type QuoteRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	QuoteId          string                 `protobuf:"bytes,1,opt,name=quote_id,json=quoteId,proto3" json:"quote_id,omitempty"`
+	ChainId          uint64                 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	MmId             string                 `protobuf:"bytes,3,opt,name=mm_id,json=mmId,proto3" json:"mm_id,omitempty"`
+	ProtocolVersion  string                 `protobuf:"bytes,4,opt,name=protocol_version,json=protocolVersion,proto3" json:"protocol_version,omitempty"`
+	QuoteRequestData []byte                 `protobuf:"bytes,5,opt,name=quote_request_data,json=quoteRequestData,proto3" json:"quote_request_data,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
 func (x *QuoteRequest) Reset() {
 	*x = QuoteRequest{}
-	mi := &file_mm_v1_mm_proto_msgTypes[5]
+	mi := &file_mm_v1_mm_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -780,7 +842,7 @@ func (x *QuoteRequest) String() string {
 func (*QuoteRequest) ProtoMessage() {}
 
 func (x *QuoteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_mm_v1_mm_proto_msgTypes[5]
+	mi := &file_mm_v1_mm_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -793,7 +855,7 @@ func (x *QuoteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QuoteRequest.ProtoReflect.Descriptor instead.
 func (*QuoteRequest) Descriptor() ([]byte, []int) {
-	return file_mm_v1_mm_proto_rawDescGZIP(), []int{5}
+	return file_mm_v1_mm_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *QuoteRequest) GetQuoteId() string {
@@ -817,70 +879,37 @@ func (x *QuoteRequest) GetMmId() string {
 	return ""
 }
 
-func (x *QuoteRequest) GetTokenIn() string {
+func (x *QuoteRequest) GetProtocolVersion() string {
 	if x != nil {
-		return x.TokenIn
+		return x.ProtocolVersion
 	}
 	return ""
 }
 
-func (x *QuoteRequest) GetTokenOut() string {
+func (x *QuoteRequest) GetQuoteRequestData() []byte {
 	if x != nil {
-		return x.TokenOut
+		return x.QuoteRequestData
 	}
-	return ""
+	return nil
 }
 
-func (x *QuoteRequest) GetAmountIn() string {
-	if x != nil {
-		return x.AmountIn
-	}
-	return ""
-}
-
-func (x *QuoteRequest) GetRecipient() string {
-	if x != nil {
-		return x.Recipient
-	}
-	return ""
-}
-
-func (x *QuoteRequest) GetNonce() string {
-	if x != nil {
-		return x.Nonce
-	}
-	return ""
-}
-
-func (x *QuoteRequest) GetDeadline() int64 {
-	if x != nil {
-		return x.Deadline
-	}
-	return 0
-}
-
-func (x *QuoteRequest) GetFrom() string {
-	if x != nil {
-		return x.From
-	}
-	return ""
-}
-
-// QuoteResponse quote response
+// QuoteResponse is a stable envelope. The versioned MM quote is serialized into
+// mm_quote_data and decoded based on protocol_version.
 type QuoteResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	QuoteId       string                 `protobuf:"bytes,1,opt,name=quote_id,json=quoteId,proto3" json:"quote_id,omitempty"`
-	ChainId       uint64                 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
-	MmId          string                 `protobuf:"bytes,3,opt,name=mm_id,json=mmId,proto3" json:"mm_id,omitempty"`
-	Status        QuoteStatus            `protobuf:"varint,4,opt,name=status,proto3,enum=mm.v1.QuoteStatus" json:"status,omitempty"`
-	Order         *SignedOrder           `protobuf:"bytes,5,opt,name=order,proto3" json:"order,omitempty"` // Signed order (for on-chain execution)
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	QuoteId         string                 `protobuf:"bytes,1,opt,name=quote_id,json=quoteId,proto3" json:"quote_id,omitempty"`
+	ChainId         uint64                 `protobuf:"varint,2,opt,name=chain_id,json=chainId,proto3" json:"chain_id,omitempty"`
+	MmId            string                 `protobuf:"bytes,3,opt,name=mm_id,json=mmId,proto3" json:"mm_id,omitempty"`
+	Status          QuoteStatus            `protobuf:"varint,4,opt,name=status,proto3,enum=mm.v1.QuoteStatus" json:"status,omitempty"`
+	ProtocolVersion string                 `protobuf:"bytes,5,opt,name=protocol_version,json=protocolVersion,proto3" json:"protocol_version,omitempty"`
+	MmQuoteData     []byte                 `protobuf:"bytes,6,opt,name=mm_quote_data,json=mmQuoteData,proto3" json:"mm_quote_data,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *QuoteResponse) Reset() {
 	*x = QuoteResponse{}
-	mi := &file_mm_v1_mm_proto_msgTypes[6]
+	mi := &file_mm_v1_mm_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -892,7 +921,7 @@ func (x *QuoteResponse) String() string {
 func (*QuoteResponse) ProtoMessage() {}
 
 func (x *QuoteResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_mm_v1_mm_proto_msgTypes[6]
+	mi := &file_mm_v1_mm_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -905,7 +934,7 @@ func (x *QuoteResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use QuoteResponse.ProtoReflect.Descriptor instead.
 func (*QuoteResponse) Descriptor() ([]byte, []int) {
-	return file_mm_v1_mm_proto_rawDescGZIP(), []int{6}
+	return file_mm_v1_mm_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *QuoteResponse) GetQuoteId() string {
@@ -936,115 +965,20 @@ func (x *QuoteResponse) GetStatus() QuoteStatus {
 	return QuoteStatus_QUOTE_STATUS_UNSPECIFIED
 }
 
-func (x *QuoteResponse) GetOrder() *SignedOrder {
+func (x *QuoteResponse) GetProtocolVersion() string {
 	if x != nil {
-		return x.Order
+		return x.ProtocolVersion
+	}
+	return ""
+}
+
+func (x *QuoteResponse) GetMmQuoteData() []byte {
+	if x != nil {
+		return x.MmQuoteData
 	}
 	return nil
 }
 
-// SignedOrder signed order (aligned with contract IQuote.MMQuote structure)
-type SignedOrder struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Signer        string                 `protobuf:"bytes,1,opt,name=signer,proto3" json:"signer,omitempty"`                           // MM signer address
-	RfqManager    string                 `protobuf:"bytes,2,opt,name=rfq_manager,json=rfqManager,proto3" json:"rfq_manager,omitempty"` // RFQ Manager contract address
-	Nonce         string                 `protobuf:"bytes,3,opt,name=nonce,proto3" json:"nonce,omitempty"`                             // Anti-replay nonce (uint256 string)
-	AmountIn      string                 `protobuf:"bytes,4,opt,name=amount_in,json=amountIn,proto3" json:"amount_in,omitempty"`       // Input amount (after fee deduction)
-	AmountOut     string                 `protobuf:"bytes,5,opt,name=amount_out,json=amountOut,proto3" json:"amount_out,omitempty"`    // Minimum output amount
-	Deadline      int64                  `protobuf:"varint,6,opt,name=deadline,proto3" json:"deadline,omitempty"`                      // Expiration timestamp (Unix seconds)
-	ExtraData     []byte                 `protobuf:"bytes,7,opt,name=extra_data,json=extraData,proto3" json:"extra_data,omitempty"`    // Extra data: abi.encode(v3Pool, zeroForOne, sqrtPriceLimit, callbackData)
-	Signature     []byte                 `protobuf:"bytes,8,opt,name=signature,proto3" json:"signature,omitempty"`                     // EIP-712 signature (65 bytes)
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *SignedOrder) Reset() {
-	*x = SignedOrder{}
-	mi := &file_mm_v1_mm_proto_msgTypes[7]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *SignedOrder) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*SignedOrder) ProtoMessage() {}
-
-func (x *SignedOrder) ProtoReflect() protoreflect.Message {
-	mi := &file_mm_v1_mm_proto_msgTypes[7]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use SignedOrder.ProtoReflect.Descriptor instead.
-func (*SignedOrder) Descriptor() ([]byte, []int) {
-	return file_mm_v1_mm_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *SignedOrder) GetSigner() string {
-	if x != nil {
-		return x.Signer
-	}
-	return ""
-}
-
-func (x *SignedOrder) GetRfqManager() string {
-	if x != nil {
-		return x.RfqManager
-	}
-	return ""
-}
-
-func (x *SignedOrder) GetNonce() string {
-	if x != nil {
-		return x.Nonce
-	}
-	return ""
-}
-
-func (x *SignedOrder) GetAmountIn() string {
-	if x != nil {
-		return x.AmountIn
-	}
-	return ""
-}
-
-func (x *SignedOrder) GetAmountOut() string {
-	if x != nil {
-		return x.AmountOut
-	}
-	return ""
-}
-
-func (x *SignedOrder) GetDeadline() int64 {
-	if x != nil {
-		return x.Deadline
-	}
-	return 0
-}
-
-func (x *SignedOrder) GetExtraData() []byte {
-	if x != nil {
-		return x.ExtraData
-	}
-	return nil
-}
-
-func (x *SignedOrder) GetSignature() []byte {
-	if x != nil {
-		return x.Signature
-	}
-	return nil
-}
-
-// QuoteReject reject quote
 type QuoteReject struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	QuoteId       string                 `protobuf:"bytes,1,opt,name=quote_id,json=quoteId,proto3" json:"quote_id,omitempty"`
@@ -1121,7 +1055,6 @@ func (x *QuoteReject) GetMessage() string {
 	return ""
 }
 
-// Heartbeat heartbeat message
 type Heartbeat struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Ping          bool                   `protobuf:"varint,1,opt,name=ping,proto3" json:"ping,omitempty"`
@@ -1174,12 +1107,11 @@ func (x *Heartbeat) GetPong() bool {
 	return false
 }
 
-// Error error message
 type Error struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	Code           ErrorCode              `protobuf:"varint,1,opt,name=code,proto3,enum=mm.v1.ErrorCode" json:"code,omitempty"`
 	Message        string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
-	RelatedQuoteId string                 `protobuf:"bytes,3,opt,name=related_quote_id,json=relatedQuoteId,proto3" json:"related_quote_id,omitempty"` // Related quote ID (optional)
+	RelatedQuoteId string                 `protobuf:"bytes,3,opt,name=related_quote_id,json=relatedQuoteId,proto3" json:"related_quote_id,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -1235,11 +1167,327 @@ func (x *Error) GetRelatedQuoteId() string {
 	return ""
 }
 
+type QuoteRequestV1 struct {
+	state                    protoimpl.MessageState    `protogen:"open.v1"`
+	TokenIn                  string                    `protobuf:"bytes,1,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty"`
+	TokenOut                 string                    `protobuf:"bytes,2,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty"`
+	AmountIn                 string                    `protobuf:"bytes,3,opt,name=amount_in,json=amountIn,proto3" json:"amount_in,omitempty"`
+	Executor                 string                    `protobuf:"bytes,4,opt,name=executor,proto3" json:"executor,omitempty"`
+	Deadline                 int64                     `protobuf:"varint,5,opt,name=deadline,proto3" json:"deadline,omitempty"`
+	Nonce                    string                    `protobuf:"bytes,6,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	From                     string                    `protobuf:"bytes,7,opt,name=from,proto3" json:"from,omitempty"`
+	Recipient                string                    `protobuf:"bytes,8,opt,name=recipient,proto3" json:"recipient,omitempty"`
+	ConfidenceExtractedValue *ConfidenceExtractedValue `protobuf:"bytes,9,opt,name=confidence_extracted_value,json=confidenceExtractedValue,proto3" json:"confidence_extracted_value,omitempty"`
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
+}
+
+func (x *QuoteRequestV1) Reset() {
+	*x = QuoteRequestV1{}
+	mi := &file_mm_v1_mm_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *QuoteRequestV1) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*QuoteRequestV1) ProtoMessage() {}
+
+func (x *QuoteRequestV1) ProtoReflect() protoreflect.Message {
+	mi := &file_mm_v1_mm_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use QuoteRequestV1.ProtoReflect.Descriptor instead.
+func (*QuoteRequestV1) Descriptor() ([]byte, []int) {
+	return file_mm_v1_mm_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *QuoteRequestV1) GetTokenIn() string {
+	if x != nil {
+		return x.TokenIn
+	}
+	return ""
+}
+
+func (x *QuoteRequestV1) GetTokenOut() string {
+	if x != nil {
+		return x.TokenOut
+	}
+	return ""
+}
+
+func (x *QuoteRequestV1) GetAmountIn() string {
+	if x != nil {
+		return x.AmountIn
+	}
+	return ""
+}
+
+func (x *QuoteRequestV1) GetExecutor() string {
+	if x != nil {
+		return x.Executor
+	}
+	return ""
+}
+
+func (x *QuoteRequestV1) GetDeadline() int64 {
+	if x != nil {
+		return x.Deadline
+	}
+	return 0
+}
+
+func (x *QuoteRequestV1) GetNonce() string {
+	if x != nil {
+		return x.Nonce
+	}
+	return ""
+}
+
+func (x *QuoteRequestV1) GetFrom() string {
+	if x != nil {
+		return x.From
+	}
+	return ""
+}
+
+func (x *QuoteRequestV1) GetRecipient() string {
+	if x != nil {
+		return x.Recipient
+	}
+	return ""
+}
+
+func (x *QuoteRequestV1) GetConfidenceExtractedValue() *ConfidenceExtractedValue {
+	if x != nil {
+		return x.ConfidenceExtractedValue
+	}
+	return nil
+}
+
+type MMQuoteV1 struct {
+	state                    protoimpl.MessageState    `protogen:"open.v1"`
+	Maker                    string                    `protobuf:"bytes,1,opt,name=maker,proto3" json:"maker,omitempty"`
+	Vault                    string                    `protobuf:"bytes,2,opt,name=vault,proto3" json:"vault,omitempty"`
+	Executor                 string                    `protobuf:"bytes,3,opt,name=executor,proto3" json:"executor,omitempty"`
+	TokenIn                  string                    `protobuf:"bytes,4,opt,name=token_in,json=tokenIn,proto3" json:"token_in,omitempty"`
+	TokenOut                 string                    `protobuf:"bytes,5,opt,name=token_out,json=tokenOut,proto3" json:"token_out,omitempty"`
+	AmountIn                 string                    `protobuf:"bytes,6,opt,name=amount_in,json=amountIn,proto3" json:"amount_in,omitempty"`
+	AmountOut                string                    `protobuf:"bytes,7,opt,name=amount_out,json=amountOut,proto3" json:"amount_out,omitempty"`
+	Deadline                 string                    `protobuf:"bytes,8,opt,name=deadline,proto3" json:"deadline,omitempty"`
+	Nonce                    string                    `protobuf:"bytes,9,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	ConfidenceExtractedValue *ConfidenceExtractedValue `protobuf:"bytes,10,opt,name=confidence_extracted_value,json=confidenceExtractedValue,proto3" json:"confidence_extracted_value,omitempty"`
+	ExtraData                []byte                    `protobuf:"bytes,11,opt,name=extra_data,json=extraData,proto3" json:"extra_data,omitempty"`
+	MmSignature              []byte                    `protobuf:"bytes,12,opt,name=mm_signature,json=mmSignature,proto3" json:"mm_signature,omitempty"`
+	QuoteId                  string                    `protobuf:"bytes,13,opt,name=quote_id,json=quoteId,proto3" json:"quote_id,omitempty"`
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
+}
+
+func (x *MMQuoteV1) Reset() {
+	*x = MMQuoteV1{}
+	mi := &file_mm_v1_mm_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *MMQuoteV1) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*MMQuoteV1) ProtoMessage() {}
+
+func (x *MMQuoteV1) ProtoReflect() protoreflect.Message {
+	mi := &file_mm_v1_mm_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use MMQuoteV1.ProtoReflect.Descriptor instead.
+func (*MMQuoteV1) Descriptor() ([]byte, []int) {
+	return file_mm_v1_mm_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *MMQuoteV1) GetMaker() string {
+	if x != nil {
+		return x.Maker
+	}
+	return ""
+}
+
+func (x *MMQuoteV1) GetVault() string {
+	if x != nil {
+		return x.Vault
+	}
+	return ""
+}
+
+func (x *MMQuoteV1) GetExecutor() string {
+	if x != nil {
+		return x.Executor
+	}
+	return ""
+}
+
+func (x *MMQuoteV1) GetTokenIn() string {
+	if x != nil {
+		return x.TokenIn
+	}
+	return ""
+}
+
+func (x *MMQuoteV1) GetTokenOut() string {
+	if x != nil {
+		return x.TokenOut
+	}
+	return ""
+}
+
+func (x *MMQuoteV1) GetAmountIn() string {
+	if x != nil {
+		return x.AmountIn
+	}
+	return ""
+}
+
+func (x *MMQuoteV1) GetAmountOut() string {
+	if x != nil {
+		return x.AmountOut
+	}
+	return ""
+}
+
+func (x *MMQuoteV1) GetDeadline() string {
+	if x != nil {
+		return x.Deadline
+	}
+	return ""
+}
+
+func (x *MMQuoteV1) GetNonce() string {
+	if x != nil {
+		return x.Nonce
+	}
+	return ""
+}
+
+func (x *MMQuoteV1) GetConfidenceExtractedValue() *ConfidenceExtractedValue {
+	if x != nil {
+		return x.ConfidenceExtractedValue
+	}
+	return nil
+}
+
+func (x *MMQuoteV1) GetExtraData() []byte {
+	if x != nil {
+		return x.ExtraData
+	}
+	return nil
+}
+
+func (x *MMQuoteV1) GetMmSignature() []byte {
+	if x != nil {
+		return x.MmSignature
+	}
+	return nil
+}
+
+func (x *MMQuoteV1) GetQuoteId() string {
+	if x != nil {
+		return x.QuoteId
+	}
+	return ""
+}
+
+type ConfidenceExtractedValue struct {
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	ConfidenceExtractedValueT string                 `protobuf:"bytes,1,opt,name=confidence_extracted_value_t,json=confidenceExtractedValueT,proto3" json:"confidence_extracted_value_t,omitempty"`
+	ConfidenceExtractedValueN string                 `protobuf:"bytes,2,opt,name=confidence_extracted_value_n,json=confidenceExtractedValueN,proto3" json:"confidence_extracted_value_n,omitempty"`
+	ConfidenceExtractedValueM string                 `protobuf:"bytes,3,opt,name=confidence_extracted_value_m,json=confidenceExtractedValueM,proto3" json:"confidence_extracted_value_m,omitempty"`
+	ConfidenceExtractedValueE string                 `protobuf:"bytes,4,opt,name=confidence_extracted_value_e,json=confidenceExtractedValueE,proto3" json:"confidence_extracted_value_e,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *ConfidenceExtractedValue) Reset() {
+	*x = ConfidenceExtractedValue{}
+	mi := &file_mm_v1_mm_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConfidenceExtractedValue) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConfidenceExtractedValue) ProtoMessage() {}
+
+func (x *ConfidenceExtractedValue) ProtoReflect() protoreflect.Message {
+	mi := &file_mm_v1_mm_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConfidenceExtractedValue.ProtoReflect.Descriptor instead.
+func (*ConfidenceExtractedValue) Descriptor() ([]byte, []int) {
+	return file_mm_v1_mm_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *ConfidenceExtractedValue) GetConfidenceExtractedValueT() string {
+	if x != nil {
+		return x.ConfidenceExtractedValueT
+	}
+	return ""
+}
+
+func (x *ConfidenceExtractedValue) GetConfidenceExtractedValueN() string {
+	if x != nil {
+		return x.ConfidenceExtractedValueN
+	}
+	return ""
+}
+
+func (x *ConfidenceExtractedValue) GetConfidenceExtractedValueM() string {
+	if x != nil {
+		return x.ConfidenceExtractedValueM
+	}
+	return ""
+}
+
+func (x *ConfidenceExtractedValue) GetConfidenceExtractedValueE() string {
+	if x != nil {
+		return x.ConfidenceExtractedValueE
+	}
+	return ""
+}
+
 var File_mm_v1_mm_proto protoreflect.FileDescriptor
 
 const file_mm_v1_mm_proto_rawDesc = "" +
 	"\n" +
-	"\x0emm/v1/mm.proto\x12\x05mm.v1\"\xe4\x03\n" +
+	"\x0emm/v1/mm.proto\x12\x05mm.v1\"\xb3\x04\n" +
 	"\aMessage\x12&\n" +
 	"\x04type\x18\x01 \x01(\x0e2\x12.mm.v1.MessageTypeR\x04type\x12\x1c\n" +
 	"\ttimestamp\x18\x02 \x01(\x03R\ttimestamp\x12=\n" +
@@ -1249,8 +1497,10 @@ const file_mm_v1_mm_proto_rawDesc = "" +
 	"\fquote_reject\x18\x06 \x01(\v2\x12.mm.v1.QuoteRejectH\x00R\vquoteReject\x120\n" +
 	"\theartbeat\x18\a \x01(\v2\x10.mm.v1.HeartbeatH\x00R\theartbeat\x12$\n" +
 	"\x05error\x18\b \x01(\v2\f.mm.v1.ErrorH\x00R\x05error\x12=\n" +
-	"\x0econnection_ack\x18\t \x01(\v2\x14.mm.v1.ConnectionAckH\x00R\rconnectionAckB\t\n" +
-	"\apayload\"\xd4\x01\n" +
+	"\x0econnection_ack\x18\t \x01(\v2\x14.mm.v1.ConnectionAckH\x00R\rconnectionAck\x12M\n" +
+	"\x14depth_snapshot_batch\x18\n" +
+	" \x01(\v2\x19.mm.v1.DepthSnapshotBatchH\x00R\x12depthSnapshotBatchB\t\n" +
+	"\apayload\"\x83\x02\n" +
 	"\rConnectionAck\x12\x18\n" +
 	"\asuccess\x18\x01 \x01(\bR\asuccess\x12\x1d\n" +
 	"\n" +
@@ -1259,7 +1509,8 @@ const file_mm_v1_mm_proto_rawDesc = "" +
 	"serverTime\x12\x13\n" +
 	"\x05mm_id\x18\x04 \x01(\tR\x04mmId\x12/\n" +
 	"\x06config\x18\x05 \x01(\v2\x17.mm.v1.ConnectionConfigR\x06config\x12#\n" +
-	"\rerror_message\x18\x06 \x01(\tR\ferrorMessage\"\xa5\x01\n" +
+	"\rerror_message\x18\x06 \x01(\tR\ferrorMessage\x12-\n" +
+	"\x12supported_versions\x18\a \x03(\tR\x11supportedVersions\"\xa5\x01\n" +
 	"\x10ConnectionConfig\x123\n" +
 	"\x16depth_push_interval_ms\x18\x01 \x01(\rR\x13depthPushIntervalMs\x12(\n" +
 	"\x10quote_timeout_ms\x18\x02 \x01(\rR\x0equoteTimeoutMs\x122\n" +
@@ -1275,37 +1526,22 @@ const file_mm_v1_mm_proto_rawDesc = "" +
 	"\n" +
 	"PriceLevel\x12\x14\n" +
 	"\x05price\x18\x01 \x01(\tR\x05price\x12\x16\n" +
-	"\x06amount\x18\x02 \x01(\tR\x06amount\"\x92\x02\n" +
+	"\x06amount\x18\x02 \x01(\tR\x06amount\"H\n" +
+	"\x12DepthSnapshotBatch\x122\n" +
+	"\tsnapshots\x18\x01 \x03(\v2\x14.mm.v1.DepthSnapshotR\tsnapshots\"\xb2\x01\n" +
 	"\fQuoteRequest\x12\x19\n" +
 	"\bquote_id\x18\x01 \x01(\tR\aquoteId\x12\x19\n" +
 	"\bchain_id\x18\x02 \x01(\x04R\achainId\x12\x13\n" +
-	"\x05mm_id\x18\x03 \x01(\tR\x04mmId\x12\x19\n" +
-	"\btoken_in\x18\x04 \x01(\tR\atokenIn\x12\x1b\n" +
-	"\ttoken_out\x18\x05 \x01(\tR\btokenOut\x12\x1b\n" +
-	"\tamount_in\x18\x06 \x01(\tR\bamountIn\x12\x1c\n" +
-	"\trecipient\x18\a \x01(\tR\trecipient\x12\x14\n" +
-	"\x05nonce\x18\b \x01(\tR\x05nonce\x12\x1a\n" +
-	"\bdeadline\x18\t \x01(\x03R\bdeadline\x12\x12\n" +
-	"\x04from\x18\n" +
-	" \x01(\tR\x04from\"\xb0\x01\n" +
+	"\x05mm_id\x18\x03 \x01(\tR\x04mmId\x12)\n" +
+	"\x10protocol_version\x18\x04 \x01(\tR\x0fprotocolVersion\x12,\n" +
+	"\x12quote_request_data\x18\x05 \x01(\fR\x10quoteRequestData\"\xd5\x01\n" +
 	"\rQuoteResponse\x12\x19\n" +
 	"\bquote_id\x18\x01 \x01(\tR\aquoteId\x12\x19\n" +
 	"\bchain_id\x18\x02 \x01(\x04R\achainId\x12\x13\n" +
 	"\x05mm_id\x18\x03 \x01(\tR\x04mmId\x12*\n" +
-	"\x06status\x18\x04 \x01(\x0e2\x12.mm.v1.QuoteStatusR\x06status\x12(\n" +
-	"\x05order\x18\x05 \x01(\v2\x12.mm.v1.SignedOrderR\x05order\"\xf1\x01\n" +
-	"\vSignedOrder\x12\x16\n" +
-	"\x06signer\x18\x01 \x01(\tR\x06signer\x12\x1f\n" +
-	"\vrfq_manager\x18\x02 \x01(\tR\n" +
-	"rfqManager\x12\x14\n" +
-	"\x05nonce\x18\x03 \x01(\tR\x05nonce\x12\x1b\n" +
-	"\tamount_in\x18\x04 \x01(\tR\bamountIn\x12\x1d\n" +
-	"\n" +
-	"amount_out\x18\x05 \x01(\tR\tamountOut\x12\x1a\n" +
-	"\bdeadline\x18\x06 \x01(\x03R\bdeadline\x12\x1d\n" +
-	"\n" +
-	"extra_data\x18\a \x01(\fR\textraData\x12\x1c\n" +
-	"\tsignature\x18\b \x01(\fR\tsignature\"\x9f\x01\n" +
+	"\x06status\x18\x04 \x01(\x0e2\x12.mm.v1.QuoteStatusR\x06status\x12)\n" +
+	"\x10protocol_version\x18\x05 \x01(\tR\x0fprotocolVersion\x12\"\n" +
+	"\rmm_quote_data\x18\x06 \x01(\fR\vmmQuoteData\"\x9f\x01\n" +
 	"\vQuoteReject\x12\x19\n" +
 	"\bquote_id\x18\x01 \x01(\tR\aquoteId\x12\x19\n" +
 	"\bchain_id\x18\x02 \x01(\x04R\achainId\x12\x13\n" +
@@ -1318,7 +1554,39 @@ const file_mm_v1_mm_proto_rawDesc = "" +
 	"\x05Error\x12$\n" +
 	"\x04code\x18\x01 \x01(\x0e2\x10.mm.v1.ErrorCodeR\x04code\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\x12(\n" +
-	"\x10related_quote_id\x18\x03 \x01(\tR\x0erelatedQuoteId*\xbb\x02\n" +
+	"\x10related_quote_id\x18\x03 \x01(\tR\x0erelatedQuoteId\"\xc4\x02\n" +
+	"\x0eQuoteRequestV1\x12\x19\n" +
+	"\btoken_in\x18\x01 \x01(\tR\atokenIn\x12\x1b\n" +
+	"\ttoken_out\x18\x02 \x01(\tR\btokenOut\x12\x1b\n" +
+	"\tamount_in\x18\x03 \x01(\tR\bamountIn\x12\x1a\n" +
+	"\bexecutor\x18\x04 \x01(\tR\bexecutor\x12\x1a\n" +
+	"\bdeadline\x18\x05 \x01(\x03R\bdeadline\x12\x14\n" +
+	"\x05nonce\x18\x06 \x01(\tR\x05nonce\x12\x12\n" +
+	"\x04from\x18\a \x01(\tR\x04from\x12\x1c\n" +
+	"\trecipient\x18\b \x01(\tR\trecipient\x12]\n" +
+	"\x1aconfidence_extracted_value\x18\t \x01(\v2\x1f.mm.v1.ConfidenceExtractedValueR\x18confidenceExtractedValue\"\xb5\x03\n" +
+	"\tMMQuoteV1\x12\x14\n" +
+	"\x05maker\x18\x01 \x01(\tR\x05maker\x12\x14\n" +
+	"\x05vault\x18\x02 \x01(\tR\x05vault\x12\x1a\n" +
+	"\bexecutor\x18\x03 \x01(\tR\bexecutor\x12\x19\n" +
+	"\btoken_in\x18\x04 \x01(\tR\atokenIn\x12\x1b\n" +
+	"\ttoken_out\x18\x05 \x01(\tR\btokenOut\x12\x1b\n" +
+	"\tamount_in\x18\x06 \x01(\tR\bamountIn\x12\x1d\n" +
+	"\n" +
+	"amount_out\x18\a \x01(\tR\tamountOut\x12\x1a\n" +
+	"\bdeadline\x18\b \x01(\tR\bdeadline\x12\x14\n" +
+	"\x05nonce\x18\t \x01(\tR\x05nonce\x12]\n" +
+	"\x1aconfidence_extracted_value\x18\n" +
+	" \x01(\v2\x1f.mm.v1.ConfidenceExtractedValueR\x18confidenceExtractedValue\x12\x1d\n" +
+	"\n" +
+	"extra_data\x18\v \x01(\fR\textraData\x12!\n" +
+	"\fmm_signature\x18\f \x01(\fR\vmmSignature\x12\x19\n" +
+	"\bquote_id\x18\r \x01(\tR\aquoteId\"\x9e\x02\n" +
+	"\x18ConfidenceExtractedValue\x12?\n" +
+	"\x1cconfidence_extracted_value_t\x18\x01 \x01(\tR\x19confidenceExtractedValueT\x12?\n" +
+	"\x1cconfidence_extracted_value_n\x18\x02 \x01(\tR\x19confidenceExtractedValueN\x12?\n" +
+	"\x1cconfidence_extracted_value_m\x18\x03 \x01(\tR\x19confidenceExtractedValueM\x12?\n" +
+	"\x1cconfidence_extracted_value_e\x18\x04 \x01(\tR\x19confidenceExtractedValueE*\xe2\x02\n" +
 	"\vMessageType\x12\x1c\n" +
 	"\x18MESSAGE_TYPE_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15MESSAGE_TYPE_REGISTER\x10\x01\x12\x1d\n" +
@@ -1329,11 +1597,13 @@ const file_mm_v1_mm_proto_rawDesc = "" +
 	"\x19MESSAGE_TYPE_QUOTE_REJECT\x10\x06\x12\x1a\n" +
 	"\x16MESSAGE_TYPE_HEARTBEAT\x10\a\x12\x16\n" +
 	"\x12MESSAGE_TYPE_ERROR\x10\b\x12\x1f\n" +
-	"\x1bMESSAGE_TYPE_CONNECTION_ACK\x10\t*^\n" +
+	"\x1bMESSAGE_TYPE_CONNECTION_ACK\x10\t\x12%\n" +
+	"!MESSAGE_TYPE_DEPTH_SNAPSHOT_BATCH\x10\n" +
+	"*^\n" +
 	"\vQuoteStatus\x12\x1c\n" +
 	"\x18QUOTE_STATUS_UNSPECIFIED\x10\x00\x12\x18\n" +
 	"\x14QUOTE_STATUS_SUCCESS\x10\x01\x12\x17\n" +
-	"\x13QUOTE_STATUS_FAILED\x10\x02*\xa6\x02\n" +
+	"\x13QUOTE_STATUS_FAILED\x10\x02*\xcf\x02\n" +
 	"\fRejectReason\x12\x1d\n" +
 	"\x19REJECT_REASON_UNSPECIFIED\x10\x00\x12(\n" +
 	"$REJECT_REASON_INSUFFICIENT_LIQUIDITY\x10\x01\x12\x1d\n" +
@@ -1342,7 +1612,8 @@ const file_mm_v1_mm_proto_rawDesc = "" +
 	"\x1eREJECT_REASON_AMOUNT_TOO_SMALL\x10\x04\x12\"\n" +
 	"\x1eREJECT_REASON_AMOUNT_TOO_LARGE\x10\x05\x12\x1e\n" +
 	"\x1aREJECT_REASON_RATE_LIMITED\x10\x06\x12 \n" +
-	"\x1cREJECT_REASON_INTERNAL_ERROR\x10\a*\xbb\x02\n" +
+	"\x1cREJECT_REASON_INTERNAL_ERROR\x10\a\x12'\n" +
+	"#REJECT_REASON_VERSION_NOT_SUPPORTED\x10\b*\xbb\x02\n" +
 	"\tErrorCode\x12\x1a\n" +
 	"\x16ERROR_CODE_UNSPECIFIED\x10\x00\x12\x1e\n" +
 	"\x1aERROR_CODE_INVALID_MESSAGE\x10\x01\x12 \n" +
@@ -1368,45 +1639,51 @@ func file_mm_v1_mm_proto_rawDescGZIP() []byte {
 }
 
 var file_mm_v1_mm_proto_enumTypes = make([]protoimpl.EnumInfo, 4)
-var file_mm_v1_mm_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
+var file_mm_v1_mm_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_mm_v1_mm_proto_goTypes = []any{
-	(MessageType)(0),         // 0: mm.v1.MessageType
-	(QuoteStatus)(0),         // 1: mm.v1.QuoteStatus
-	(RejectReason)(0),        // 2: mm.v1.RejectReason
-	(ErrorCode)(0),           // 3: mm.v1.ErrorCode
-	(*Message)(nil),          // 4: mm.v1.Message
-	(*ConnectionAck)(nil),    // 5: mm.v1.ConnectionAck
-	(*ConnectionConfig)(nil), // 6: mm.v1.ConnectionConfig
-	(*DepthSnapshot)(nil),    // 7: mm.v1.DepthSnapshot
-	(*PriceLevel)(nil),       // 8: mm.v1.PriceLevel
-	(*QuoteRequest)(nil),     // 9: mm.v1.QuoteRequest
-	(*QuoteResponse)(nil),    // 10: mm.v1.QuoteResponse
-	(*SignedOrder)(nil),      // 11: mm.v1.SignedOrder
-	(*QuoteReject)(nil),      // 12: mm.v1.QuoteReject
-	(*Heartbeat)(nil),        // 13: mm.v1.Heartbeat
-	(*Error)(nil),            // 14: mm.v1.Error
+	(MessageType)(0),                 // 0: mm.v1.MessageType
+	(QuoteStatus)(0),                 // 1: mm.v1.QuoteStatus
+	(RejectReason)(0),                // 2: mm.v1.RejectReason
+	(ErrorCode)(0),                   // 3: mm.v1.ErrorCode
+	(*Message)(nil),                  // 4: mm.v1.Message
+	(*ConnectionAck)(nil),            // 5: mm.v1.ConnectionAck
+	(*ConnectionConfig)(nil),         // 6: mm.v1.ConnectionConfig
+	(*DepthSnapshot)(nil),            // 7: mm.v1.DepthSnapshot
+	(*PriceLevel)(nil),               // 8: mm.v1.PriceLevel
+	(*DepthSnapshotBatch)(nil),       // 9: mm.v1.DepthSnapshotBatch
+	(*QuoteRequest)(nil),             // 10: mm.v1.QuoteRequest
+	(*QuoteResponse)(nil),            // 11: mm.v1.QuoteResponse
+	(*QuoteReject)(nil),              // 12: mm.v1.QuoteReject
+	(*Heartbeat)(nil),                // 13: mm.v1.Heartbeat
+	(*Error)(nil),                    // 14: mm.v1.Error
+	(*QuoteRequestV1)(nil),           // 15: mm.v1.QuoteRequestV1
+	(*MMQuoteV1)(nil),                // 16: mm.v1.MMQuoteV1
+	(*ConfidenceExtractedValue)(nil), // 17: mm.v1.ConfidenceExtractedValue
 }
 var file_mm_v1_mm_proto_depIdxs = []int32{
 	0,  // 0: mm.v1.Message.type:type_name -> mm.v1.MessageType
 	7,  // 1: mm.v1.Message.depth_snapshot:type_name -> mm.v1.DepthSnapshot
-	9,  // 2: mm.v1.Message.quote_request:type_name -> mm.v1.QuoteRequest
-	10, // 3: mm.v1.Message.quote_response:type_name -> mm.v1.QuoteResponse
+	10, // 2: mm.v1.Message.quote_request:type_name -> mm.v1.QuoteRequest
+	11, // 3: mm.v1.Message.quote_response:type_name -> mm.v1.QuoteResponse
 	12, // 4: mm.v1.Message.quote_reject:type_name -> mm.v1.QuoteReject
 	13, // 5: mm.v1.Message.heartbeat:type_name -> mm.v1.Heartbeat
 	14, // 6: mm.v1.Message.error:type_name -> mm.v1.Error
 	5,  // 7: mm.v1.Message.connection_ack:type_name -> mm.v1.ConnectionAck
-	6,  // 8: mm.v1.ConnectionAck.config:type_name -> mm.v1.ConnectionConfig
-	8,  // 9: mm.v1.DepthSnapshot.bids:type_name -> mm.v1.PriceLevel
-	8,  // 10: mm.v1.DepthSnapshot.asks:type_name -> mm.v1.PriceLevel
-	1,  // 11: mm.v1.QuoteResponse.status:type_name -> mm.v1.QuoteStatus
-	11, // 12: mm.v1.QuoteResponse.order:type_name -> mm.v1.SignedOrder
-	2,  // 13: mm.v1.QuoteReject.reason:type_name -> mm.v1.RejectReason
-	3,  // 14: mm.v1.Error.code:type_name -> mm.v1.ErrorCode
-	15, // [15:15] is the sub-list for method output_type
-	15, // [15:15] is the sub-list for method input_type
-	15, // [15:15] is the sub-list for extension type_name
-	15, // [15:15] is the sub-list for extension extendee
-	0,  // [0:15] is the sub-list for field type_name
+	9,  // 8: mm.v1.Message.depth_snapshot_batch:type_name -> mm.v1.DepthSnapshotBatch
+	6,  // 9: mm.v1.ConnectionAck.config:type_name -> mm.v1.ConnectionConfig
+	8,  // 10: mm.v1.DepthSnapshot.bids:type_name -> mm.v1.PriceLevel
+	8,  // 11: mm.v1.DepthSnapshot.asks:type_name -> mm.v1.PriceLevel
+	7,  // 12: mm.v1.DepthSnapshotBatch.snapshots:type_name -> mm.v1.DepthSnapshot
+	1,  // 13: mm.v1.QuoteResponse.status:type_name -> mm.v1.QuoteStatus
+	2,  // 14: mm.v1.QuoteReject.reason:type_name -> mm.v1.RejectReason
+	3,  // 15: mm.v1.Error.code:type_name -> mm.v1.ErrorCode
+	17, // 16: mm.v1.QuoteRequestV1.confidence_extracted_value:type_name -> mm.v1.ConfidenceExtractedValue
+	17, // 17: mm.v1.MMQuoteV1.confidence_extracted_value:type_name -> mm.v1.ConfidenceExtractedValue
+	18, // [18:18] is the sub-list for method output_type
+	18, // [18:18] is the sub-list for method input_type
+	18, // [18:18] is the sub-list for extension type_name
+	18, // [18:18] is the sub-list for extension extendee
+	0,  // [0:18] is the sub-list for field type_name
 }
 
 func init() { file_mm_v1_mm_proto_init() }
@@ -1422,6 +1699,7 @@ func file_mm_v1_mm_proto_init() {
 		(*Message_Heartbeat)(nil),
 		(*Message_Error)(nil),
 		(*Message_ConnectionAck)(nil),
+		(*Message_DepthSnapshotBatch)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -1429,7 +1707,7 @@ func file_mm_v1_mm_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_mm_v1_mm_proto_rawDesc), len(file_mm_v1_mm_proto_rawDesc)),
 			NumEnums:      4,
-			NumMessages:   11,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

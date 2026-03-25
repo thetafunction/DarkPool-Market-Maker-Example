@@ -11,13 +11,13 @@ import (
 
 // Config application configuration
 type Config struct {
-	App           AppConfig           `yaml:"app"`
-	Signer        SignerConfig        `yaml:"signer"`
-	WebSocket     WebSocketConfig     `yaml:"websocket"`
-	EIP712Domains []EIP712Domain      `yaml:"eip712Domains"`
-	Quote         QuoteConfig         `yaml:"quote"`
-	Depth         DepthConfig         `yaml:"depth"`
-	Pairs         []PairConfig        `yaml:"pairs"`
+	App           AppConfig       `yaml:"app"`
+	Signer        SignerConfig    `yaml:"signer"`
+	WebSocket     WebSocketConfig `yaml:"websocket"`
+	EIP712Domains []EIP712Domain  `yaml:"eip712Domains"`
+	Quote         QuoteConfig     `yaml:"quote"`
+	Depth         DepthConfig     `yaml:"depth"`
+	Pairs         []PairConfig    `yaml:"pairs"`
 }
 
 // AppConfig application basic configuration
@@ -58,12 +58,10 @@ type WebSocketConfig struct {
 	WriteTimeout         time.Duration `yaml:"writeTimeout"`
 }
 
-// EIP712Domain EIP-712 Domain configuration
+// EIP712Domain configures the RFQ MMVault signing domain for one chain.
 type EIP712Domain struct {
-	ChainID           uint64 `yaml:"chainId"`
-	Name              string `yaml:"name"`
-	Version           string `yaml:"version"`
-	VerifyingContract string `yaml:"verifyingContract"`
+	ChainID  uint64 `yaml:"chainId"`
+	RFQVault string `yaml:"rfqVault"`
 }
 
 // QuoteConfig quote configuration
@@ -154,8 +152,8 @@ func (c *Config) Validate() error {
 		if domain.ChainID == 0 {
 			return fmt.Errorf("eip712Domains[%d].chainId is required", i)
 		}
-		if domain.VerifyingContract == "" {
-			return fmt.Errorf("eip712Domains[%d].verifyingContract is required", i)
+		if domain.RFQVault == "" {
+			return fmt.Errorf("eip712Domains[%d].rfqVault is required", i)
 		}
 	}
 	return nil

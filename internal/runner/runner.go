@@ -8,6 +8,8 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/ThetaSpace/DarkPool-Market-Maker-Example/internal/config"
 	"github.com/ThetaSpace/DarkPool-Market-Maker-Example/internal/depth"
 	"github.com/ThetaSpace/DarkPool-Market-Maker-Example/internal/quote"
@@ -36,15 +38,10 @@ func New(cfg *config.Config, logger *slog.Logger) (*Runner, error) {
 	// 1. Initialize EIP-712 Domain Manager
 	domainManager := signer.NewDomainManager()
 	for _, domain := range cfg.EIP712Domains {
-		domainManager.AddPoolDomainWithConfig(
-			domain.ChainID,
-			domain.Name,
-			domain.Version,
-			domain.VerifyingContract,
-		)
-		logger.Info("Registered EIP-712 domain",
+		domainManager.AddVaultDomain(domain.ChainID, common.HexToAddress(domain.RFQVault))
+		logger.Info("Registered vault EIP-712 domain",
 			"chainId", domain.ChainID,
-			"verifyingContract", domain.VerifyingContract)
+			"rfqVault", domain.RFQVault)
 	}
 
 	// 2. Initialize signer

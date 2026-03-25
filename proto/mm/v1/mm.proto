@@ -4,14 +4,10 @@ package mm.v1;
 
 option go_package = "github.com/ThetaSpace/DarkPool-Market-Maker-Example/mm/v1;mmv1";
 
-// ============================================================================
-// Common Message Wrapper
-// ============================================================================
-
-// Message is the unified wrapper for all WebSocket messages
+// Message is the unified wrapper for all WebSocket messages.
 message Message {
   MessageType type = 1;
-  int64 timestamp = 2;  // Unix milliseconds timestamp
+  int64 timestamp = 2;
 
   oneof payload {
     DepthSnapshot depth_snapshot = 3;
@@ -21,10 +17,10 @@ message Message {
     Heartbeat heartbeat = 7;
     Error error = 8;
     ConnectionAck connection_ack = 9;
+    DepthSnapshotBatch depth_snapshot_batch = 10;
   }
 }
 
-// MessageType message type enumeration
 enum MessageType {
   MESSAGE_TYPE_UNSPECIFIED = 0;
   MESSAGE_TYPE_REGISTER = 1;
@@ -35,107 +31,72 @@ enum MessageType {
   MESSAGE_TYPE_QUOTE_REJECT = 6;
   MESSAGE_TYPE_HEARTBEAT = 7;
   MESSAGE_TYPE_ERROR = 8;
-  MESSAGE_TYPE_CONNECTION_ACK = 9;  // Connection confirmation after token authentication
+  MESSAGE_TYPE_CONNECTION_ACK = 9;
+  MESSAGE_TYPE_DEPTH_SNAPSHOT_BATCH = 10;
 }
 
-// ============================================================================
-// Connection Acknowledgment (SE -> MM) (Token Authentication Mode)
-// ============================================================================
-
-// ConnectionAck connection confirmation (sent after token authentication success)
 message ConnectionAck {
   bool success = 1;
   string session_id = 2;
-  int64 server_time = 3;              // Server time (Unix milliseconds)
-  string mm_id = 4;                   // Confirmed MM ID
+  int64 server_time = 3;
+  string mm_id = 4;
   ConnectionConfig config = 5;
-  string error_message = 6;           // Error message on failure
+  string error_message = 6;
+  repeated string supported_versions = 7;
 }
 
-// ConnectionConfig connection configuration (sent by server)
 message ConnectionConfig {
-  uint32 depth_push_interval_ms = 1;  // Suggested push interval (milliseconds)
-  uint32 quote_timeout_ms = 2;        // Quote timeout (milliseconds)
-  uint32 heartbeat_interval_ms = 3;   // Heartbeat interval (milliseconds)
+  uint32 depth_push_interval_ms = 1;
+  uint32 quote_timeout_ms = 2;
+  uint32 heartbeat_interval_ms = 3;
 }
 
-// ============================================================================
-// Depth Snapshot (MM -> SE)
-// ============================================================================
-
-// DepthSnapshot depth snapshot (pushed independently for each pool)
 message DepthSnapshot {
   uint64 chain_id = 1;
   string pair_id = 2;
   string mm_id = 3;
   string token_a = 4;
   string token_b = 5;
-  repeated PriceLevel bids = 6; // Bids (price descending)
-  repeated PriceLevel asks = 7; // Asks (price ascending)
+  repeated PriceLevel bids = 6;
+  repeated PriceLevel asks = 7;
 }
 
-// PriceLevel price level
 message PriceLevel {
-  string price = 1;   // Price (tokenB/tokenA)
-  string amount = 2;  // Amount (tokenA)
+  string price = 1;
+  string amount = 2;
 }
 
-// ============================================================================
-// Quote Request (SE -> MM)
-// ============================================================================
+message DepthSnapshotBatch {
+  repeated DepthSnapshot snapshots = 1;
+}
 
-// QuoteRequest quote request
+// QuoteRequest is a stable envelope. The versioned body is serialized into
+// quote_request_data and decoded based on protocol_version.
 message QuoteRequest {
-  string quote_id = 1;        // Quote request unique ID (UUID)
+  string quote_id = 1;
   uint64 chain_id = 2;
   string mm_id = 3;
-  string token_in = 4;        // Input token address
-  string token_out = 5;       // Output token address
-  string amount_in = 6;       // Input amount (uint256 string)
-  string from = 7;            // Sender address
-  string recipient = 8;       // User recipient address
-  string nonce = 9;           // Anti-replay nonce
-  int64 deadline = 10;        // Expiration timestamp (Unix seconds)
+  string protocol_version = 4;
+  bytes quote_request_data = 5;
 }
 
-// ============================================================================
-// Quote Response (MM -> SE)
-// ============================================================================
-
-// QuoteResponse quote response
+// QuoteResponse is a stable envelope. The versioned MM quote is serialized into
+// mm_quote_data and decoded based on protocol_version.
 message QuoteResponse {
   string quote_id = 1;
   uint64 chain_id = 2;
   string mm_id = 3;
   QuoteStatus status = 4;
-  SignedOrder order = 5;      // Signed order (for on-chain execution)
+  string protocol_version = 5;
+  bytes mm_quote_data = 6;
 }
 
-// QuoteStatus quote status
 enum QuoteStatus {
   QUOTE_STATUS_UNSPECIFIED = 0;
   QUOTE_STATUS_SUCCESS = 1;
   QUOTE_STATUS_FAILED = 2;
 }
 
-
-// SignedOrder signed order (aligned with contract IQuote.MMQuote structure)
-message SignedOrder {
-  string signer = 1;              // MM signer address
-  string rfq_manager = 2;         // RFQ Manager contract address
-  string nonce = 3;               // Anti-replay nonce (uint256 string)
-  string amount_in = 4;           // Input amount (after fee deduction)
-  string amount_out = 5;          // Minimum output amount
-  int64 deadline = 6;             // Expiration timestamp (Unix seconds)
-  bytes extra_data = 7;           // Extra data: abi.encode(v3Pool, zeroForOne, sqrtPriceLimit, callbackData)
-  bytes signature = 8;            // EIP-712 signature (65 bytes)
-}
-
-// ============================================================================
-// Quote Rejection (MM -> SE)
-// ============================================================================
-
-// QuoteReject reject quote
 message QuoteReject {
   string quote_id = 1;
   uint64 chain_id = 2;
@@ -144,7 +105,6 @@ message QuoteReject {
   string message = 5;
 }
 
-// RejectReason rejection reason
 enum RejectReason {
   REJECT_REASON_UNSPECIFIED = 0;
   REJECT_REASON_INSUFFICIENT_LIQUIDITY = 1;
@@ -154,30 +114,20 @@ enum RejectReason {
   REJECT_REASON_AMOUNT_TOO_LARGE = 5;
   REJECT_REASON_RATE_LIMITED = 6;
   REJECT_REASON_INTERNAL_ERROR = 7;
+  REJECT_REASON_VERSION_NOT_SUPPORTED = 8;
 }
 
-// ============================================================================
-// Heartbeat (Bidirectional)
-// ============================================================================
-
-// Heartbeat heartbeat message
 message Heartbeat {
   bool ping = 1;
   bool pong = 2;
 }
 
-// ============================================================================
-// Error (Bidirectional)
-// ============================================================================
-
-// Error error message
 message Error {
   ErrorCode code = 1;
   string message = 2;
-  string related_quote_id = 3;  // Related quote ID (optional)
+  string related_quote_id = 3;
 }
 
-// ErrorCode error code
 enum ErrorCode {
   ERROR_CODE_UNSPECIFIED = 0;
   ERROR_CODE_INVALID_MESSAGE = 1;
@@ -186,7 +136,42 @@ enum ErrorCode {
   ERROR_CODE_INTERNAL = 4;
   ERROR_CODE_NOT_REGISTERED = 5;
   ERROR_CODE_DUPLICATE_REGISTER = 6;
-  ERROR_CODE_UNAUTHORIZED = 7;          // Token verification failed
-  ERROR_CODE_PAIR_NOT_WHITELISTED = 8;  // Pair not whitelisted
-  ERROR_CODE_RATE_LIMITED = 9;          // Rate limited (exceeded rate limit)
+  ERROR_CODE_UNAUTHORIZED = 7;
+  ERROR_CODE_PAIR_NOT_WHITELISTED = 8;
+  ERROR_CODE_RATE_LIMITED = 9;
+}
+
+message QuoteRequestV1 {
+  string token_in = 1;
+  string token_out = 2;
+  string amount_in = 3;
+  string executor = 4;
+  int64 deadline = 5;
+  string nonce = 6;
+  string from = 7;
+  string recipient = 8;
+  ConfidenceExtractedValue confidence_extracted_value = 9;
+}
+
+message MMQuoteV1 {
+  string maker = 1;
+  string vault = 2;
+  string executor = 3;
+  string token_in = 4;
+  string token_out = 5;
+  string amount_in = 6;
+  string amount_out = 7;
+  string deadline = 8;
+  string nonce = 9;
+  ConfidenceExtractedValue confidence_extracted_value = 10;
+  bytes extra_data = 11;
+  bytes mm_signature = 12;
+  string quote_id = 13;
+}
+
+message ConfidenceExtractedValue {
+  string confidence_extracted_value_t = 1;
+  string confidence_extracted_value_n = 2;
+  string confidence_extracted_value_m = 3;
+  string confidence_extracted_value_e = 4;
 }
