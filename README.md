@@ -156,7 +156,7 @@ The `E2ETest/` directory contains a standalone end-to-end test program that veri
 
 | Step | Description |
 |------|-------------|
-| **Step 1: Orderbook** | Connects to the QE WebSocket, subscribes to a trading pair, and verifies that depth data from your MM is received |
+| **Step 1: Orderbook** | Connects to the QE WebSocket, subscribes to a trading pair, filters depth updates by `target_mm_id`, and verifies that depth data from your MM is received |
 | **Step 2: firmQuote** | Picks the MM from the depth update, calls the B-side firmQuote API, and verifies a valid quote is returned |
 | **Step 3: On-chain Settlement** | Decodes the RFQ quote, approves the input token, and calls `Settlement.settle()` on-chain to verify the quote settles successfully |
 
@@ -195,7 +195,21 @@ If no config path is provided, it defaults to `E2ETest/config.yml`.
 
 ### Configuration Reference
 
-See [`E2ETest/config.yml`](E2ETest/config.yml) for all available options and descriptions.
+| Field | Description |
+|-------|-------------|
+| `b2b_ws_url` | QE WebSocket endpoint for orderbook subscription |
+| `business_api_key` | JWT token for WS auth and firmQuote API calls |
+| `rfq_api_host` | RFQ API host for firmQuote requests |
+| `chain_id` | Target chain ID (e.g. 56 for BSC) |
+| `rpc_endpoint` | JSON-RPC endpoint for on-chain transactions |
+| `token_a` | Input token address |
+| `token_b` | Output token address |
+| `pair_id` | Trading pair identifier (e.g. "USDT-WBNB") |
+| `target_mm_id` | MM ID to filter from orderbook depth. A single pair may have multiple MMs pushing depth; set this to test a specific one. Leave empty to accept the first MM |
+| `trader_private_key` | Trader account private key (without 0x prefix) |
+| `amount_in` | Amount of input token in smallest unit |
+
+See [`E2ETest/config.yml`](E2ETest/config.yml) for a full template with comments.
 
 ## Documentation
 

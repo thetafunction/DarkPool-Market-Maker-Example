@@ -57,6 +57,7 @@ type Config struct {
 	TokenA           string `yaml:"token_a"`
 	TokenB           string `yaml:"token_b"`
 	PairID           string `yaml:"pair_id"`
+	TargetMmId       string `yaml:"target_mm_id"`
 	TraderPrivateKey string `yaml:"trader_private_key"`
 	AmountIn         string `yaml:"amount_in"`
 }
@@ -420,7 +421,7 @@ func (c *B2BClient) waitForSubscribeAck(timeout time.Duration) error {
 // DepthUpdate    { chain_id(1), mm_id(2), base_token(3), quote_token(4), bids(5), asks(6), update_time(7) }
 // PriceLevelInfo { price(1), amount(2) }
 // QEHeartbeat    { ping(1), pong(2) }
-func (c *B2BClient) waitForDepthUpdate(timeout time.Duration) (*DepthUpdateInfo, error) {
+func (c *B2BClient) waitForDepthUpdate(timeout time.Duration, targetMmId string) (*DepthUpdateInfo, error) {
 	deadline := time.Now().Add(timeout)
 	for time.Now().Before(deadline) {
 		remaining := time.Until(deadline)
@@ -443,6 +444,11 @@ func (c *B2BClient) waitForDepthUpdate(timeout time.Duration) (*DepthUpdateInfo,
 		case qeTypeDepthUpdate: // 5
 			du := d.SubMsg(qeFieldDepthUpdate) // field 7
 			if du == nil {
+				continue
+			}
+			mmId := du.String(2)
+			if targetMmId != "" && mmId != targetMmId {
+				log.Printf("[B2B] Skipping depth from mm_id=%s (waiting for %s)", mmId, targetMmId)
 				continue
 			}
 			var bids, asks []PriceLevel
@@ -818,7 +824,10 @@ func main() {
 	}
 
 	log.Println("[B2B] Waiting for depth update from live MM...")
-	du, err := b2b.waitForDepthUpdate(30 * time.Second)
+	if cfg.TargetMmId != "" {
+		log.Printf("[B2B] Filtering for target mm_id=%s", cfg.TargetMmId)
+	}
+	du, err := b2b.waitForDepthUpdate(30*time.Second, cfg.TargetMmId)
 	if err != nil {
 		log.Fatalf("Depth update failed: %v", err)
 	}

@@ -19,6 +19,11 @@ token_a: "<token_a_address>"   # Input token address  (e.g. USDT: 0x55d398326f99
 token_b: "<token_b_address>"   # Output token address (e.g. WBNB: 0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c)
 pair_id: "<pair_id>"           # Pair identifier (e.g. "USDT-WBNB"), must match the platform registration
 
+# Target MM ID to filter from the orderbook depth updates.
+# A single pair may have multiple MMs pushing depth; set this to test a specific one.
+# Leave empty to accept the first MM that pushes depth.
+target_mm_id: ""
+
 # Trader account private key (sends firmQuote + executes on-chain settle)
 # This account must hold tokenA balance and enough native token for gas.
 # Without 0x prefix.
