@@ -75,6 +75,9 @@ Or use the script:
 │   └── main.go
 ├── configs/                   # Configuration files
 │   └── config.example.yaml
+├── E2ETest/                   # E2E integration test
+│   ├── main.go                # Test program (no MM mock)
+│   └── config.yml             # Test configuration template
 ├── internal/
 │   ├── config/                # Configuration parsing
 │   │   └── config.go
@@ -144,6 +147,55 @@ type DepthProvider interface {
 ```
 
 Refer to `internal/depth/mock_provider.go` for implementation details.
+
+## E2E Integration Test
+
+The `E2ETest/` directory contains a standalone end-to-end test program that verifies your Market Maker service is working correctly with the DarkPool platform. It does **not** mock any MM logic — it tests against your live MM service.
+
+### What It Tests
+
+| Step | Description |
+|------|-------------|
+| **Step 1: Orderbook** | Connects to the QE WebSocket, subscribes to a trading pair, and verifies that depth data from your MM is received |
+| **Step 2: firmQuote** | Picks the MM from the depth update, calls the B-side firmQuote API, and verifies a valid quote is returned |
+| **Step 3: On-chain Settlement** | Decodes the RFQ quote, approves the input token, and calls `Settlement.settle()` on-chain to verify the quote settles successfully |
+
+### Prerequisites
+
+- Your MM service must be **running and pushing depth** for the configured trading pair
+- The trader account must hold sufficient **input token balance** and **native token for gas**
+- Go 1.22+
+
+### Usage
+
+1. Copy and fill in the configuration:
+
+```bash
+cp E2ETest/config.yml E2ETest/config.local.yml
+# Edit config.local.yml with your real values
+```
+
+2. Run the test:
+
+```bash
+go run ./E2ETest/ E2ETest/config.local.yml
+```
+
+If no config path is provided, it defaults to `E2ETest/config.yml`.
+
+3. All three steps should print `PASSED`:
+
+```
+[Step 1] PASSED: Orderbook depth received successfully
+[Step 2] PASSED: firmQuote returned valid result
+[Step 3] PASSED: On-chain settlement succeeded
+
+========== B2B E2E Test PASSED ==========
+```
+
+### Configuration Reference
+
+See [`E2ETest/config.yml`](E2ETest/config.yml) for all available options and descriptions.
 
 ## Documentation
 
