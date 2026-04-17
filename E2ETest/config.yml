@@ -1,0 +1,34 @@
+# E2E Test Configuration
+# Fill in real values before running the test.
+
+# B2B QE WebSocket endpoint (aggregator subscribes to orderbook here)
+b2b_ws_url: "wss://<qe_domain>/v1/quote/orderbook"
+
+# Business API key (issued by the platform, used for WS auth and firmQuote calls)
+business_api_key: "<your_business_api_key>"
+
+# RFQ API host (used to call firmQuote)
+rfq_api_host: "https://<rfq_api_domain>"
+
+# Chain configuration
+chain_id: 56                       # BSC Mainnet; change as needed
+rpc_endpoint: "<your_rpc_endpoint>" # e.g. QuickNode / Alchemy / self-hosted
+
+# Trading pair configuration (adjust to match the pair registered on the platform)
+token_a: "<token_a_address>"   # Input token address  (e.g. USDT: 0x55d398326f99059ff775485246999027b3197955)
+token_b: "<token_b_address>"   # Output token address (e.g. WBNB: 0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c)
+pair_id: "<pair_id>"           # Pair identifier (e.g. "USDT-WBNB"), must match the platform registration
+
+# Target MM ID to filter from the orderbook depth updates.
+# A single pair may have multiple MMs pushing depth; set this to test a specific one.
+# Leave empty to accept the first MM that pushes depth.
+target_mm_id: ""
+
+# Trader account private key (sends firmQuote + executes on-chain settle)
+# This account must hold tokenA balance and enough native token for gas.
+# Without 0x prefix.
+trader_private_key: "<your_trader_private_key>"
+
+# Amount of tokenIn to use in the firmQuote request (in smallest unit)
+# e.g. 1 USDT (18 decimals) = "1000000000000000000"
+amount_in: "<amount_in>"
