@@ -102,10 +102,11 @@ message DepthSnapshot {
   string token_b = 5;
   repeated PriceLevel bids = 6;
   repeated PriceLevel asks = 7;
+  string min_order_size = 8;
 }
 ```
 
-`PriceLevel.price` is the `token_b_wei / token_a_wei` ratio. `PriceLevel.amount` uses `token_a` native decimals.
+`PriceLevel.price` is the `token_b_wei / token_a_wei` ratio. `PriceLevel.amount` uses `token_a` native decimals. `min_order_size` is the minimum fill size for `token_a` (wei string); `"0"`, empty, or omitted means no minimum.
 
 ## Quote Request Envelope
 
@@ -203,6 +204,7 @@ enum RejectReason {
   REJECT_REASON_RATE_LIMITED = 6;
   REJECT_REASON_INTERNAL_ERROR = 7;
   REJECT_REASON_VERSION_NOT_SUPPORTED = 8;
+  REJECT_REASON_INVALID_PARAMS = 9;
 }
 ```
 
